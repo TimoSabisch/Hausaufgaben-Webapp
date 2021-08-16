@@ -1,6 +1,7 @@
 from django.db import models
 from django_mysql import models as mysql
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import User
 
 
 class Entry(models.Model):
@@ -47,53 +48,49 @@ class Group(models.Model):
 
     admins = mysql.ListCharField(base_field=models.IntegerField(),
                                  size=50,
-                                 max_length=(50*8),
+                                 max_length=(50 * 8),
                                  default=[],
                                  blank=True)
-    members = mysql.ListCharField(base_field=models.IntegerField(),
-                                  size=50,
-                                  max_length=(50*8),
-                                  default=[],
-                                  blank=True)
-    entries = mysql.ListCharField(base_field=models.IntegerField(),
-                                  size=50,
-                                  max_length=(50*8),
-                                  default=[],
-                                  blank=True)
+    members = models.ManyToManyField(User)
+    entries = models.ManyToManyField(Entry,
+                                     blank=True)
 
-    def add_member(self, user_id: int, admin: bool = False):
+    def add_member(self, user: int, admin: bool = False):
+        user = User.objects.get(id=user.id)
         if admin:
-            self.admins.append(user_id)
+            self.admins.append(user.id)
         else:
-            self.members.append(user_id)
+            self.members.add(user)
 
-    def remove_member(self, user_id: int):
-        if user_id in self.admins:
-            self.admins.remove(user_id)
-        elif user_id in self.members:
-            self.admins.remove(user_id)
+    def remove_member(self, user: int):
+        user = User.objects.get(id=user.id)
+        if user.id in self.admins:
+            self.admins.remove(user.id)
+        elif user.id in self.members:
+            self.members.remove(User.objects.get(id=user.id))
 
     def add_entry(self, entry_id: int):
         if entry_id not in self.entries:
-            self.entries.append(entry_id)
+            self.entries.add(Entry.objects.get(id=entry_id))
 
     def remove_entry(self, entry_id: int):
         if entry_id in self.entries:
-            self.entries.remove(entry_id)
+            self.entries.remove(Entry.objects.get(id=entry_id))
 
-    def set_role(self, user_id: int, role: Role):
-        if role == self.Role.ADMIN and user_id in self.members:
-            self.admins.append(user_id)
-            self.members.remove(user_id)
-        elif role == self.Role.MEMBER and user_id in self.admins:
-            self.members.append(user_id)
-            self.admins.remove(user_id)
+    def set_role(self, user: int, role: Role):
+        user = User.objects.get(id=user.id)
+        if role == self.Role.ADMIN and user.id in self.members:
+            self.admins.append(user.id)
+        elif role == self.Role.MEMBER and user.id in self.admins:
+            self.admins.remove(user.id)
 
-    def get_role(self, user_id: int):
-        if user_id in self.admins:
-            return self.Role.ADMIN
-        elif user_id in self.members:
-            return self.Role.MEMBER
+    def get_role(self, user: int):
+        user = User.objects.get(id=user.id)
+        if user in self.members.all():
+            if user.id in self.admins:
+                return self.Role.ADMIN
+            else:
+                return self.Role.MEMBER
         else:
             return self.Role.__empty__
 
