@@ -14,34 +14,34 @@
                             Ansicht
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="groupDDMenuLink">
-                            <li><a class="dropdown-item" href="#">Privat</a></li>
+                            <li><a class="dropdown-item {% if currently_viewed == 0 %}active{% endif %}" href="{% url view 0 %}">Privat</a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% if groups == None %}
                                 <li><a class="dropdown-item disabled" href="#">Keine Gruppen</a></li>
                             {% else %}
                                 {% for group in groups %}
-                                    <li><a class="dropdown-item" href="#">{{ group.title }}</a></li>
+                                    <li><a class="dropdown-item {% if currently_viewed == group.id %}active{% endif %}" href="{% url view group.id %}">{{ group.title }}</a></li>
                                 {% endfor %}
                             {% endif %}
                         </ul>
                     </div>
                 </div>
                 <div class="col-6" align="right">
-                    <a href="./weekview">
+                    <a href="{% url 'weekview' %}">
                     <button class="btn btn-outline-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-grid-3x2" viewBox="4 0 8 16">
                             <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5v-8zM1.5 3a.5.5 0 0 0-.5.5V7h4V3H1.5zM5 8H1v3.5a.5.5 0 0 0 .5.5H5V8zm1 0v4h4V8H6zm4-1V3H6v4h4zm1 1v4h3.5a.5.5 0 0 0 .5-.5V8h-4zm0-1h4V3.5a.5.5 0 0 0-.5-.5H11v4z" transform="rotate(90, 8, 8)"/>
                         </svg>
                     </button>
                     </a>
-                    <a href="./entryview">
+                    <a href="{% url 'dayview' %}">
                     <button class="btn btn-outline-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar" viewBox="0 0 16 16">
                             <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
                         </svg>
                     </button>
                     </a>
-                    <a href="./dayview">
+                    <a href="{% url 'entryview' %}">
                     <button class="btn btn-outline-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list-ul" viewBox="2 1 12 14">
                             <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
@@ -57,7 +57,7 @@
                             </svg>
                         </button>
                         <ul class = dropdown-menu aria-labelledby="userDDMenuLink">
-                            <li><a class="dropdown-item" href="#">{{ username }}</a></li>
+                            <h1 class="dropdown-header">{{ username }}</h1>
                             <li><a class="dropdown-item" href="#">Abmelden</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#">Gruppen</a></li>
@@ -67,12 +67,12 @@
             {% endblock %}
         </div>
     </div>
+    {% block content %}
     <div class="container">
         <div class="row">
-            {% block content %}
                 Content
-            {% endblock %}
         </div>
     </div>
+    {% endblock %}
 </div>
 {% endblock %}
