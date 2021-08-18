@@ -8,7 +8,8 @@ class Entry(models.Model):
     title = models.CharField(max_length=50)
     note = models.TextField()
     date = models.DateField()
-    owner = models.IntegerField()
+    owner = models.ForeignKey(User, related_name="entry_owner_set", on_delete=models.CASCADE)
+    privat_user = models.ForeignKey(User, related_name="entry_privat_set", on_delete=models.CASCADE, null=True, blank=True)
     done_by = mysql.ListCharField(base_field=models.IntegerField(),
                                   size=50,
                                   max_length=(50*8),
