@@ -3,5 +3,249 @@
 {% block title %} Wochen-Ansicht {% endblock %}
 
 {% block content %}
-    Wochen-Ansicht
+    <div id="contentContainer" class="container-fluid" style="width: 1000px">
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+    function getLang() {
+      if (navigator.languages != undefined)
+        return navigator.languages[0];
+      return navigator.language;
+    }
+    const locale = getLang();
+    Date.prototype.getWeekNumber = function(){
+        let d = new Date(this.getTime());
+        let dayNum = d.getDay() || 7;
+        d.setDate(d.getDate() + 4 - dayNum);
+        let yearStart = new Date(d.getUTCFullYear(),0,1);
+        return Math.floor((((d - yearStart) / 86400000) + 1)/7)
+    };
+    Date.prototype.getDayName = function () {
+        let ret = this.toLocaleDateString(locale, { weekday: 'long' });
+        return ret;
+    }
+    function expandTextarea(id1, id2) {
+        document.getElementById(id1).addEventListener("shown.bs.modal", async function() {
+            let textarea = document.getElementById(id2);
+            textarea.style.overflow = 'hidden';
+            textarea.style.height = 0;
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }, false);
+    }
+    function getDateOfWeek(w, y) {
+        let simple = new Date(y, 0, 1 + (w - 1) * 7);
+        let dow = simple.getDay();
+        let ISOweekStart = simple;
+        if (dow <= 4)
+            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else
+            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        return ISOweekStart;
+    }
+
+    django_data = {{ view_data|safe }};
+    entries = [];
+    weeks = {};
+
+    class Entry {
+        constructor(id, title, note, date, type, creator_id, creator_name) {
+            this.id = id;
+            this.title = title;
+            this.note = note;
+            this.date = date;
+            this.dateString = `${this.date.getDate()}.${this.date.getMonth()+1}.${this.date.getFullYear()}`;
+            this.week = this.date.getWeekNumber()
+            this.type = type;
+            this.creatorId = creator_id;
+            this.creatorName = creator_name;
+        }
+
+        createDetails() {
+            let modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "entryModal" + this.id;
+            modal.tabIndex = -1;
+            modal.setAttribute("aria-hidden", "true")
+            modal.innerHTML = `
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">${this.title}</h5>
+        </div>
+        <div class="modal-body">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Notiz</span>
+                    </div>
+                    <div class="col-10">
+                        <textarea id="noteArea${this.id}" class="textarea-autosize" type="text" readonly aria-label="note1" style="resize: none">${this.note}</textarea>
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Datum</span>
+                    </div>
+                    <div class="col-3">
+                        <input type="text" readonly aria-label="date${this.id}" value="${this.dateString}" style="width: 100px">
+                    </div>
+                    <div class="col-3">
+                        <input type="text" readonly aria-label="date${this.id}" value="Woche ${this.week}" style="width: 100px">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" readonly aria-label="date${this.id}" value="${this.date.getDayName()}" style="width: 100%; align-self: end">
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Typ</span>
+                    </div>
+                    <div class="col-10">
+                        <input type="text" readonly aria-label="type${this.id}" value="${this.type}" style="width: 100px">
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Ersteller</span>
+                    </div>
+                    <div class="col-10">
+                        <input type="text" readonly aria-label="creator${this.id}" value="${this.creatorName}" style="width: 100px">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+        </div>
+    </div>
+</div>`
+
+            document.getElementById("contentContainer").insertAdjacentHTML("beforebegin", modal.outerHTML);
+            expandTextarea(modal.id, `noteArea${this.id}`);
+        }
+    }
+    class Week {
+        constructor(date) {
+            this.dateStart = new Date();
+            this.dateStart.setDate(date.getDate()-date.getDay()+1);
+            this.dateEnd = new Date();
+            this.dateEnd.setDate(date.getDate()-date.getDay()+7);
+            this.weekNumber = this.dateStart.getWeekNumber();
+
+            this.entries = [];
+
+            this.createHTML();
+        }
+
+        addEntry(entry) {
+            this.entries.push(entry);
+        }
+
+        createHTML() {
+            let dayHTMLs = ["", "", "", "", "", "", ""];
+
+            for (let i = 0; i < this.entries.length; i++) {
+                let entry = this.entries[i];
+                let html = `<input type="button" data-bs-toggle="modal" data-bs-target="#entryModal${entry.id}" style="width: 100%; text-align: start" readonly id="entry${entry.id}" aria-label="Entry${entry.id}" value="${entry.title}">`
+
+                dayHTMLs[entry.date.getDay()-1] += html;
+            }
+
+            this.weekHTML = `
+<h1 style="text-align: center">Woche ${this.weekNumber}; ${this.dateStart.getDate()}.${this.dateStart.getMonth()}.${this.dateEnd.getFullYear().toString().slice(-2)} - ${this.dateEnd.getDate()}.${this.dateEnd.getMonth()}.${this.dateEnd.getFullYear().toString().slice(-2)}</h1>
+<div class="row" style="height: 250px">
+    <div class="col border border-dark">
+        <h2>Montag</h2>
+        ${dayHTMLs[0]}
+    </div>
+    <div class="col border border-dark">
+        <h2>Donnerstag</h2>
+        ${dayHTMLs[3]}
+    </div>
+</div>
+<div class="row" style="height: 250px">
+    <div class="col border border-dark">
+        <h2>Dienstag</h2>
+        ${dayHTMLs[1]}
+    </div>
+    <div class="col border border-dark">
+        <h2>Freitag</h2>
+        ${dayHTMLs[4]}
+    </div>
+</div>
+<div class="row" style="height: 250px">
+    <div class="col border border-dark">
+        <h2>Mittwoch</h2>
+        ${dayHTMLs[2]}
+    </div>
+    <div class="col border border-dark">
+        <h2>Wochenende</h2>
+        ${dayHTMLs[5]}
+        ${dayHTMLs[6]}
+    </div>
+</div>
+`
+        }
+        show() {
+            let container = document.getElementById("contentContainer");
+            container.innerHTML = this.weekHTML;
+        }
+    }
+    function showWeek(weekNum=0, year=0) {
+        if (weekNum === 0) {
+            let curDate = new Date();
+            weekNum = curDate.getWeekNumber();
+        }
+        if (year === 0) {
+            let curDate = new Date();
+            year = curDate.getFullYear();
+        }
+        if (Object.keys(weeks).includes(`${weekNum}.${year}`)) {
+            weeks[`${weekNum}.${year}`].show();
+        }
+        else {
+            let date = getDateOfWeek(weekNum, year);
+            let week = new Week(date);
+            week.show();
+        }
+    }
+
+    for (let i = 0; i < django_data.entries.length; i++) {
+        let entry = django_data.entries[i];
+        let date = new Date(entry.date);
+        entries.push(new Entry(entry.id, entry.title, entry.note, date, entry.type, entry.creator.id, entry.creator.username));
+    }
+    for (let i = 0; i < entries.length; i++) {
+        let entry = entries[i];
+        entry.createDetails();
+
+        if (Object.keys(weeks).includes(`${entry.date.getWeekNumber()}.${entry.date.getFullYear()}`)) {
+            let week = weeks[`${entry.date.getWeekNumber()}.${entry.date.getFullYear()}`];
+            week.addEntry(entry)
+        }
+        else {
+            let week = new Week(entry.date);
+            week.addEntry(entry);
+            weeks[`${week.weekNumber}.${week.dateStart.getFullYear()}`] = week;
+        }
+    }
+    Object.keys(weeks).forEach(function(key){
+        weeks[key].createHTML();
+    });
+
+    showWeek();
+
+    </script>
 {% endblock %}
