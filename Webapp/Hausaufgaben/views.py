@@ -1,7 +1,8 @@
-from django.shortcuts import loader, HttpResponse, redirect
+from django.shortcuts import loader, HttpResponse, redirect, HttpResponseRedirect
+from django.urls import reverse
 import django.contrib.auth as auth
 import json
-from .models import Group
+from .models import Group, Entry
 from enum import Enum
 
 DEFAULT_USER_ID = 1  # TODO: change to -1
@@ -51,6 +52,7 @@ def get_view_data(request, group):
                     "note": entry.note,
                     "date": entry.date.isoformat(),
                     "type": entry_type_to_str(entry.type),
+                    "done": user.id in entry.done_by,
                     "creator": {
                         "id": entry.owner.id,
                         "username": entry.owner.username
@@ -64,6 +66,7 @@ def get_view_data(request, group):
                 "note": entry.note,
                 "date": entry.date.isoformat(),
                 "type": entry_type_to_str(entry.type),
+                "done": user.id in entry.done_by,
                 "creator": {
                     "id": entry.owner.id,
                     "username": entry.owner.username
@@ -72,7 +75,9 @@ def get_view_data(request, group):
 
     context = {
         "entries": entries,
-        "user": user.id
+        "user": user.id,
+        "weekview_week": request.session.get("weekview_week", 0),
+        "weekview_year": request.session.get("weekview_year", 0)
     }
 
     return context
@@ -89,15 +94,26 @@ def home(request):
     return redirect("login" if not request.user.is_authenticated else f"weekview")
 
 
-def page_not_found(request):
-    return redirect("home")
-
-
 def week_view(request, group=0):
     if not request.user.is_authenticated:
         return redirect("login")
 
+    http_redirect = False
     user = request.user
+    if request.method == "POST":
+        if request.POST["type"] == "changeEntryDone":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            if user.id in entry.done_by:
+                entry.done_by.remove(user.id)
+            else:
+                entry.done_by.append(user.id)
+            entry.save()
+
+            request.session["weekview_week"] = request.POST["cur_week"]
+            request.session["weekview_year"] = request.POST["cur_year"]
+            http_redirect = True
+
     template = loader.get_template("Hausaufgaben/week_view.html")
 
     context = {
@@ -106,7 +122,10 @@ def week_view(request, group=0):
     context.update(get_menu_context(request, group))
     context["view_data"] = json.dumps(get_view_data(request, group))
 
-    return HttpResponse(template.render(context, request))
+    if http_redirect:
+        return HttpResponseRedirect(reverse("weekview", args=(context["currently_viewed"],)))
+    else:
+        return HttpResponse(template.render(context, request))
 
 
 def entry_view(request, group=0):
