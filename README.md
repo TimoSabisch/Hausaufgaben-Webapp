@@ -11,13 +11,6 @@ Es gibt auch mehrere Ansichten:
 - Tages-Ansicht
 
 ## Installation
-### Django und Django-MySQL installieren:
-
-```shell
-python -m pip install Django==3.2.6
-python -m pip install Django-MySQL==3.12.0
-```
-
 ### Datenbank verbinden
 
 #### WICHTIG: die Datenbank muss eine MySQL datenbank sein.
