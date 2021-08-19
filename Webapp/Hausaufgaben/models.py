@@ -19,9 +19,6 @@ class Entry(models.Model):
     class EntryType(models.IntegerChoices):
         TASK = 0, _("Task")
         REMINDER = 1, _("Reminder")
-        TEST = 2, _("Test")
-
-        __empty__ = _('(Unknown)')
 
     type = models.IntegerField(choices=EntryType.choices, default=EntryType.TASK)
 
@@ -44,8 +41,6 @@ class Group(models.Model):
     class Role(models.IntegerChoices):
         MEMBER = 0, _("Member")
         ADMIN = 1, _("Admin")
-
-        __empty__ = _('(Unknown)')
 
     admins = mysql.ListCharField(base_field=models.IntegerField(),
                                  size=50,

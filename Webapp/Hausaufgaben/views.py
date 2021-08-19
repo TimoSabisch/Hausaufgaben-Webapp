@@ -2,6 +2,7 @@ from django.shortcuts import loader, HttpResponse, redirect, HttpResponseRedirec
 from django.urls import reverse
 import django.contrib.auth as auth
 import json
+import datetime
 from .models import Group, Entry
 from enum import Enum
 
@@ -19,8 +20,6 @@ def entry_type_to_str(entry_type):
         return "Aufgabe"
     elif entry_type == 1:
         return "Erinnerung"
-    elif entry_type == 2:
-        return "Test"
     return "Unknown"
 
 
@@ -109,6 +108,35 @@ def week_view(request, group=0):
             else:
                 entry.done_by.append(user.id)
             entry.save()
+
+            request.session["weekview_week"] = request.POST["cur_week"]
+            request.session["weekview_year"] = request.POST["cur_year"]
+            http_redirect = True
+        elif request.POST["type"] == "editEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+            entry.title = title
+            entry.note = note
+            entry.date = date
+            if entry_type == "1":
+                entry.type = entry.EntryType.TASK
+            elif entry_type == "2":
+                entry.type = entry.EntryType.REMINDER
+            entry.save()
+            request.session["weekview_week"] = request.POST["cur_week"]
+            request.session["weekview_year"] = request.POST["cur_year"]
+            http_redirect = True
+        elif request.POST["type"] == "deleteEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            entry.delete()
 
             request.session["weekview_week"] = request.POST["cur_week"]
             request.session["weekview_year"] = request.POST["cur_year"]
