@@ -65,23 +65,22 @@ class Group(models.Model):
         elif user.id in self.members:
             self.members.remove(User.objects.get(id=user.id))
 
-    def add_entry(self, entry_id: int):
-        if entry_id not in self.entries:
-            self.entries.add(Entry.objects.get(id=entry_id))
+    def add_entry(self, entry: Entry):
+        if not self.entries.filter(id=entry.id):
+            print(entry)
+            self.entries.add(entry)
 
-    def remove_entry(self, entry_id: int):
-        if entry_id in self.entries:
-            self.entries.remove(Entry.objects.get(id=entry_id))
+    def remove_entry(self, entry: Entry):
+        if self.entries.filter(id=entry.id):
+            self.entries.remove(entry)
 
-    def set_role(self, user: int, role: Role):
-        user = User.objects.get(id=user.id)
+    def set_role(self, user: User, role: Role):
         if role == self.Role.ADMIN and user.id in self.members:
             self.admins.append(user.id)
         elif role == self.Role.MEMBER and user.id in self.admins:
             self.admins.remove(user.id)
 
-    def get_role(self, user: int):
-        user = User.objects.get(id=user.id)
+    def get_role(self, user: User):
         if user in self.members.all():
             if user.id in self.admins:
                 return self.Role.ADMIN
