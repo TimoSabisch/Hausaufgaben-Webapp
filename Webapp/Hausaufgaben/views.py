@@ -1,4 +1,5 @@
 from django.shortcuts import loader, HttpResponse, redirect, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 import django.contrib.auth as auth
 import json
@@ -28,8 +29,23 @@ def get_menu_context(request, group):
 
     groups = user.group_set.all()
 
+    group_info = []
+    for group_ in groups:
+        group_info.append({
+            "id": group_.id,
+            "title": group_.title,
+            "members": [
+                {
+                    "id": member.id,
+                    "username": member.username,
+                    "role": group_.get_role(member)
+                } for member in group_.members.all()
+            ]
+        })
+
     context = {
         "groups": groups if len(groups) != 0 else None,
+        "group_info": json.dumps(group_info),
         "username": user.username,
         "currently_viewed": request.session.get("currently_viewed", group if groups.filter(id=group) else 0)
     }
@@ -93,6 +109,7 @@ def home(request):
     return redirect("login" if not request.user.is_authenticated else f"weekview")
 
 
+@csrf_exempt
 def week_view(request, group=0):
     if not request.user.is_authenticated:
         return redirect("login")
@@ -141,6 +158,32 @@ def week_view(request, group=0):
             request.session["weekview_week"] = request.POST["cur_week"]
             request.session["weekview_year"] = request.POST["cur_year"]
             http_redirect = True
+        elif request.POST["type"] == "createEntry":
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            if title and date and entry_type:
+
+                date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+                if entry_type == "1":
+                    entry_type = Entry.EntryType.TASK
+                elif entry_type == "2":
+                    entry_type = Entry.EntryType.REMINDER
+
+                entry = Entry(title=title, note=note, date=date, owner=user, type=entry_type)
+                entry.save()
+
+                if group == 0:
+                    entry.privat_user = user
+                else:
+                    Group.objects.get(id=group).add_entry(entry)
+
+                http_redirect = True
+            else:
+                http_redirect = True
 
     template = loader.get_template("Hausaufgaben/week_view.html")
 

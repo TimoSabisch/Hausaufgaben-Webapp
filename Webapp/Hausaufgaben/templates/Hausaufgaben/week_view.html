@@ -43,7 +43,7 @@
         return ("0" + this.getDate()).slice(-2);
     }
     Date.prototype.getTwoDigitMonth = function () {
-        return ("0" + this.getMonth()).slice(-2);
+        return ("0" + (this.getMonth()+1)).slice(-2);
     }
     function expandTextarea(id1, id2) {
         document.getElementById(id1).addEventListener("shown.bs.modal", async function() {
@@ -70,9 +70,94 @@
         document.getElementById("entryEditWeek" + id).value = "Woche " + date.getWeekNumber();
         document.getElementById("entryEditDay" + id).value = date.getDayName();
     }
+    function entryCreateDateChange(id) {
+        let date = new Date(document.getElementById("dateEntryCreate").value);
+        document.getElementById("weekEntryCreate").value = "Woche " + date.getWeekNumber();
+        document.getElementById("dayEntryCreate").value = date.getDayName();
+    }
     function getDateOfWeek(w, y) {
         let day1 = new Date(y, 0, 1);
         return new Date(y, 0, (7*w)-jsDayToNormal(day1.getDay())+1, 12);
+    }
+    function entryCreateModal() {
+        try {
+                document.getElementById("entryCreateModal").remove();
+            } catch(e) {}
+
+            let date = new Date();
+            let dateString = `${date.getFullYear()}-${date.getTwoDigitMonth()}-${date.getTwoDigitDate()}`;
+
+            let modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "entryCreateModal";
+            modal.tabIndex = -1;
+            modal.setAttribute("aria-hidden", "true")
+            modal.innerHTML = `
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" id="entryCreateModalContent">
+        <form action="{% url 'weekview' currently_viewed %}" method="post">
+            {% csrf_token %}
+            <div class="modal-header" style="padding: 10px 10px">
+                <input required name="title" id="titleEntryCreate" maxlength="50" class="textarea-autosize" type="text" aria-label="titleEntryCreate" style="resize: none; width: 100%" placeholder="Titel">
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Notiz</span>
+                        </div>
+                        <div class="col-10">
+                            <textarea name="note" id="noteEntryCreate" class="textarea-autosize" type="text" aria-label="noteEntryCreate" style="resize: none" placeholder="Notiz"></textarea>
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Datum</span>
+                        </div>
+                        <div class="col-4">
+                            <input required name="date" id="dateEntryCreate" type="date" onchange="entryCreateDateChange(${this.id})" value="${dateString}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="weekEntryCreate" type="text" readonly aria-label="weekEntryCreate" value="Woche ${date.getWeekNumber()}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="dayEntryCreate" type="text" readonly aria-label="dayEntryCreate" value="${date.getDayName()}" style="width: 100%; align-self: end">
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div id="entryCreateTypeRow" class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Typ</span>
+                        </div>
+                        <div class="col-10">
+                            <select name="entryType" class="form-select-sm" aria-label="typeSelectEntryCreate">
+                                <option value="1">Aufgabe</option>
+                                <option value="2">Erinnerung</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 10px 10px">
+                <input name="type" value="createEntry" hidden="true">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+                <button class="btn btn-primary" onclick="postEntryCreate()" >Erstellen</button>
+            </div>
+        </form>
+    </div>
+</div>`
+
+            document.getElementById("contentContainer").insertAdjacentHTML("beforebegin", modal.outerHTML);
+            expandTextarea(modal.id, `noteEntryCreate`);
+
+            modal = new bootstrap.Modal(document.getElementById("entryCreateModal"), false);
+            modal.show();
     }
 
     django_data = {{ view_data|safe }};
@@ -384,11 +469,22 @@
         <h1 style="text-align: center">Woche ${this.weekNumber}; ${this.dateStart.getDate()}.${this.dateStart.getMonth()+1}.${this.dateStart.getFullYear().toString().slice(-2)} - ${this.dateEnd.getDate()}.${this.dateEnd.getMonth()+1}.${this.dateEnd.getFullYear().toString().slice(-2)}</h1>
     </div>
     <div class="col-2" align="right">
-        <button class="btn btn-primary btn-circle btn-lg" onclick="nextWeek()" style="padding: 8px 8px">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-arrow-right" viewBox="1 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-            </svg>
-        </button>
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-primary btn-circle btn-lg" onclick="entryCreateModal()" style="padding: 8px 8px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="col">
+                <button class="btn btn-primary btn-circle btn-lg" onclick="nextWeek()" style="padding: 8px 8px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-arrow-right" viewBox="1 0 16 16">
+                        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 <div class="row" style="height: 250px">
