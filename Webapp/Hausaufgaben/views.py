@@ -2,6 +2,7 @@ from django.shortcuts import loader, HttpResponse, redirect, HttpResponseRedirec
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 import django.contrib.auth as auth
+from django.contrib.auth.models import User
 import json
 import datetime
 from .models import Group, Entry
@@ -229,9 +230,74 @@ def day_view(request, group=0):
     return HttpResponse(template.render(context, request))
 
 
+@csrf_exempt
 def login(request):
     template = loader.get_template("Hausaufgaben/login.html")
 
-    # TODO: Add login check
+    if request.user.is_authenticated:
+        return redirect("home")
 
-    return HttpResponse(template.render())
+    context = {
+        "error": 0,
+        "user": ""
+    }
+
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        if username and password:
+            user = auth.authenticate(username=username, password=password)
+
+            if user is not None:
+                auth.login(request, user)
+                return HttpResponseRedirect(reverse("weekview", args=(0,)))
+            else:
+                context["error"] = 1
+                context["user"] = username
+        else:
+            context["error"] = 2
+            context["user"] = username
+
+    return HttpResponse(template.render(context))
+
+
+def logout(request):
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    auth.logout(request)
+    return redirect("login")
+
+
+@csrf_exempt
+def register(request):
+    template = loader.get_template("Hausaufgaben/register.html")
+
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    context = {
+        "error": 0,
+        "user": ""
+    }
+
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        if username and password:
+            if not User.objects.filter(username=username):
+                user = User.objects.create_user(username=username, password=password)
+                auth.login(request, user)
+
+                return HttpResponseRedirect(reverse("weekview", args=(0,)))
+            else:
+                context["error"] = 1
+                context["user"] = username
+        else:
+            context["error"] = 2
+            context["user"] = username
+
+    return HttpResponse(template.render(context))

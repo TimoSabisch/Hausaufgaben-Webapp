@@ -12,4 +12,6 @@ urlpatterns = [
     path('dayview', views.day_view, name='dayview'),
     path('dayview/<int:group>/', views.day_view, name='dayview'),
     path('login', views.login, name='login'),
+    path('logout', views.logout, name='logout'),
+    path('register', views.register, name='register'),
 ]

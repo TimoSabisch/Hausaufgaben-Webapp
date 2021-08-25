@@ -1,15 +1,15 @@
 {% extends "Hausaufgaben/page.html" %}
 
-{% block title %}Anmelden{% endblock %}
+{% block title %}Registrieren{% endblock %}
 
 {% block body %}
     <div class="modal" id="registerModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <form id="form" action="{% url "login" %}" method="post" novalidate>
+                    <form id="form" action="{% url "register" %}" method="post" novalidate>
                         <div class="modal-header text-center" style="padding: 0 0 10px 0">
-                            <h5 class="modal-title w-100">Anmelden</h5>
+                            <h5 class="modal-title w-100">Registrieren</h5>
                         </div>
 
                         <div class="input-group input-group-sm has-validation invalid is-invalid" style="margin-top: 10px">
@@ -17,22 +17,28 @@
                             <input class="form-control has-validation" id="usernameInput" name="username" type="text" aria-label="username" placeholder="Benutzername" value="{{ user }}" required>
                             <div class="invalid-feedback">Gib einen Benutzernamen an.</div>
                         </div>
-                        <div class="input-group input-group-sm" style="margin-top: 10px; margin-bottom: 10px">
+                        {% if error == 1 %}
+                            <span class="error" style="color: #dc3545; font-size: .875em">Ein Nutzer mit dem Namen existiert bereits.</span>
+                        {% endif %}
+                        <div class="input-group input-group-sm" style="margin-top: 10px">
                             <span class="input-group-text" style="width: 33%">Passwort</span>
                             <input class="form-control" id="passwordInput" name="password" type="password" aria-label="password" placeholder="Passwort">
                             <div class="invalid-feedback">Gib ein Passwort an.</div>
                         </div>
-                        <div class="w-100" style="text-align: end; font-size: .75em">
-                            <a href="{% url "register" %}">Registrieren?</a>
+                        <div class="input-group input-group-sm" style="margin-top: 10px; margin-bottom: 10px">
+                            <span class="input-group-text" style="width: 33%">Passwort Wiederholen</span>
+                            <input class="form-control" id="passwordRepeatInput" name="passwordRepeat" type="password" aria-label="passwordRepeat" placeholder="Passwort Wiederholen">
+                            <div class="invalid-feedback">Die Passwörter stimmen nicht überein.</div>
                         </div>
-                        {% if error == 1 %}
-                            <span class="error" style="color: #dc3545; font-size: .875em">Nutzername und/oder Passwort sind falsch.</span>
-                        {% elif error == 2 %}
+                        <div class="w-100" style="text-align: end; font-size: .75em">
+                            <a href="{% url "login" %}">Anmelden?</a>
+                        </div>
+                        {% if error == 2 %}
                             <span class="error" style="color: #dc3545; font-size: .875em">Es müssen alle Felder ausgefüllt sein.</span>
                         {% endif %}
 
                         <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 10px">
-                            <button class="btn btn-primary  mt-0" type="submit" style="margin-top: 20px; width: 40%">Anmelden</button>
+                            <button class="btn btn-primary  mt-0" type="submit" style="margin-top: 20px; width: 40%">Registrieren</button>
                         </div>
                     </form>
                 </div>
@@ -76,6 +82,15 @@
             else {
                 passwordInput.classList.remove("is-invalid");
                 passwordInput.classList.add("is-valid");
+            }
+            if (passwordRepeatInput.value !== passwordInput.value || passwordInput.value === "") {
+                event.preventDefault();
+                event.stopPropagation();
+                passwordRepeatInput.classList.add("is-invalid");
+            }
+            else {
+                passwordRepeatInput.classList.remove("is-invalid");
+                passwordRepeatInput.classList.add("is-valid");
             }
         }, false);
     </script>
