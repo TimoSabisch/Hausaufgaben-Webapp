@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Waiting for DB
-sleep 30
+# docker-compose handles waiting for DB via depends_on condition
 
 python ./manage.py migrate
 python ./manage.py runserver 0:8000

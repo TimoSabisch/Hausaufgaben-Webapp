@@ -8,6 +8,9 @@ services:
       - "8001:8000"
     environment:
       - "MYSQL_PASSWORD"
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   mysql:
     image: mysql:8
@@ -16,3 +19,7 @@ services:
       - "MYSQL_DATABASE=webappdb"
       - "MYSQL_USER=dbadmin"
       - "MYSQL_PASSWORD"
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
