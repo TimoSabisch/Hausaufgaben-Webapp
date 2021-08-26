@@ -8,8 +8,6 @@ import datetime
 from .models import Group, Entry
 from enum import Enum
 
-DEFAULT_USER_ID = 1  # TODO: change to -1
-
 
 class Views(Enum):
     WEEK_VIEW = 0
@@ -179,12 +177,16 @@ def week_view(request, group=0):
 
                 if group == 0:
                     entry.privat_user = user
+                    entry.save()
                 else:
                     Group.objects.get(id=group).add_entry(entry)
 
                 http_redirect = True
             else:
                 http_redirect = True
+    elif request.method == "GET":
+        request.session["weekview_week"] = 0
+        request.session["weekview_year"] = 0
 
     template = loader.get_template("Hausaufgaben/week_view.html")
 
