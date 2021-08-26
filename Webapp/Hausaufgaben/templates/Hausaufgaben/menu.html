@@ -5,74 +5,287 @@
 {% block body %}
 <body>
 <div id="content">
-    <div class="container-fluid">
-        <div class="row" style="padding: 10px 0;">
-            {% block menu %}
-                <div class="col-5">
-                    <div class="dropdown">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="groupDDMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                            Ansicht
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="groupDDMenuLink">
+    <div id="groupModal" tabindex="-1" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="padding: 10px 10px">
+                    <h5>Gruppen</h5>
+                </div>
+                <div id="groupModalBody" class="modal-body">
+                    <div class="row">
+                        <div class="col text-start">
+                            <select id="groupModalGroupSelect" onchange="updateGroupModalList()" class="form-select form-select-sm" aria-label="groupModalGroupSelect" style="width: auto">
+                            </select>
+                        </div>
+                        <div class="col text-end">
+                            <button class="btn btn-primary btn-circle" style="padding: 4px 4px"  id="groupAddDDLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                </svg>
+                            </button>
+                            <ul class = "dropdown-menu dropdown-menu-end" aria-labelledby="groupAddDD" style="padding: 0">
+                                <li><button class="dropdown-item btn-sm" data-bs-target="#groupCreateModal" data-bs-toggle="modal">Gruppe erstellen</button></li>
+                                <li><hr class="dropdown-divider" style="margin: 0"></li>
+                                <li><button id="memberAddButton" class="dropdown-item btn-sm" data-bs-target="#memberAddModal" data-bs-toggle="modal">Mitglied hinzufügen</button></li>
+                            </ul>
+                        </div>
+                    </div>
+
+
+                    <h5 style="margin-bottom: 2px; margin-top: 10px">Mitglieder</h5>
+                    <ul id="groupMemberList" class="list-group list-group-flush list-group-scroll border" style="margin-top: 0">
+                        <li id="groupMemberListSplit" class="hidden"></li>
+                    </ul>
+                </div>
+                <div class="modal-footer" style="padding: 10px 10px">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="groupCreateModal" tabindex="-1" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header" style="padding: 10px 10px">
+                    <h5>Gruppe erstellen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="groupCreateForm" action="{% url view currently_viewed %}" method="post" novalidate>
+                    <input type="hidden" name="type" value="createGroup">
+                    <div id="groupCreateModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
+                        <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
+                            <span class="input-group-text" style="width: 22%">Name</span>
+                            <input class="form-control has-validation" id="groupNameInput" name="groupName" type="text" aria-label="groupName" placeholder="GruppenName" value="" required>
+                            <div class="invalid-feedback">Gib einen GruppenNamen an.</div>
+                        </div>
+                        <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
+                            <button class="btn btn-primary btn-sm mt-0" type="submit" style="margin-bottom: 0; width: 40%">Erstellen</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="memberAddModal" tabindex="-1" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header" style="padding: 10px 10px">
+                    <h5>Mitglied hinzufügen</h5>
+                </div>
+                <form id="userAddForm" action="{% url view currently_viewed %}" method="post">
+                    <input type="hidden" name="type" value="addUser">
+                    <input id="memberAddGroupId" type="hidden" name="group" value="-1">
+                    <div id="memberAddModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
+                        <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
+                            <span class="input-group-text" style="width: 22%">Name</span>
+                            <input class="form-control has-validation" id="usernameInput" name="username" type="text" aria-label="username" placeholder="Name" value="" required>
+                            <div class="invalid-feedback">Gib einen Namen an.</div>
+                        </div>
+                        <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
+                            <button class="btn btn-primary btn-sm mt-0" type="submit" style="margin-bottom: 0; width: 40%">Hinzufügen</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="groupDDMenuLink1" data-bs-toggle="dropdown" aria-expanded="false">Ansicht</button>
+                        <ul class="dropdown-menu" aria-labelledby="groupDDMenuLink1">
                             <li><a class="dropdown-item {% if currently_viewed == 0 %}active{% endif %}" href="{% url view 0 %}">Privat</a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% if groups == None %}
                                 <li><a class="dropdown-item disabled" href="#">Keine Gruppen</a></li>
                             {% else %}
-                                {% for group in groups %}
-                                    <li><a class="dropdown-item {% if currently_viewed == group.id %}active{% endif %}" href="{% url view group.id %}">{{ group.title }}</a></li>
-                                {% endfor %}
+                            {% for group in groups %}
+                                <li><a class="dropdown-item {% if currently_viewed == group.id %}active{% endif %}" href="{% url view group.id %}">{{ group.title }}</a></li>
+                            {% endfor %}
                             {% endif %}
                         </ul>
-                    </div>
-                </div>
-                <div class="col-6" align="right">
-                    <a href="{% url 'weekview' %}">
-                    <button class="btn btn-outline-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-grid-3x2" viewBox="4 0 8 16">
-                            <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5v-8zM1.5 3a.5.5 0 0 0-.5.5V7h4V3H1.5zM5 8H1v3.5a.5.5 0 0 0 .5.5H5V8zm1 0v4h4V8H6zm4-1V3H6v4h4zm1 1v4h3.5a.5.5 0 0 0 .5-.5V8h-4zm0-1h4V3.5a.5.5 0 0 0-.5-.5H11v4z" transform="rotate(90, 8, 8)"/>
-                        </svg>
-                    </button>
-                    </a>
-                    <a href="{% url 'dayview' %}">
-                    <button class="btn btn-outline-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar" viewBox="0 0 16 16">
-                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-                        </svg>
-                    </button>
-                    </a>
-                    <a href="{% url 'entryview' %}">
-                    <button class="btn btn-outline-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list-ul" viewBox="2 1 12 14">
-                            <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                        </svg>
-                    </button>
-                    </a>
-                </div>
-                <div class="col-1" align="right">
-                    <div class="btn-group">
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a href="{% url 'weekview' %}">
+                            <button class="btn btn-outline-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-grid-3x2" viewBox="4 0 8 16">
+                                    <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 11.5v-8zM1.5 3a.5.5 0 0 0-.5.5V7h4V3H1.5zM5 8H1v3.5a.5.5 0 0 0 .5.5H5V8zm1 0v4h4V8H6zm4-1V3H6v4h4zm1 1v4h3.5a.5.5 0 0 0 .5-.5V8h-4zm0-1h4V3.5a.5.5 0 0 0-.5-.5H11v4z" transform="rotate(90, 8, 8)"/>
+                                </svg>
+                            </button>
+                        </a>
+                    </li>
+                    <li class="nav-item" style="margin-left: 5px">
+                        <a href="{% url 'dayview' %}">
+                            <button class="btn btn-outline-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar" viewBox="0 0 16 16">
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                </svg>
+                            </button>
+                        </a>
+                    </li>
+                    <li class="nav-item" style="margin-left: 5px">
+                        <a href="{% url 'entryview' %}">
+                            <button class="btn btn-outline-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list-ul" viewBox="2 1 12 14">
+                                    <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                                </svg>
+                            </button>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown" style="margin-left: 20px">
                         <button class="btn btn-outline-primary dropdown-toggle" id="userDDMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person" viewBox="2 2 12 12">
                                 <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
                             </svg>
                         </button>
-                        <ul class = dropdown-menu aria-labelledby="userDDMenuLink">
+                        <ul class = "dropdown-menu dropdown-menu-end" aria-labelledby="userDDMenuLink">
                             <h1 class="dropdown-header">{{ username }}</h1>
-                            <li><a class="dropdown-item" href="#">Abmelden</a></li>
+                            <li><a class="dropdown-item" href="{% url "logout" %}">Abmelden</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">Gruppen</a></li>
+                            <li><button class="dropdown-item" data-bs-target="#groupModal" data-bs-toggle="modal">Gruppen</button></li>
                         </ul>
-                    </div>
-                </div>
-            {% endblock %}
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
     {% block content %}
     <div class="container">
         <div class="row">
-                Content
+            Content
         </div>
     </div>
     {% endblock %}
 </div>
+{% endblock %}
+
+{% block script_menu %}
+    <script>
+    group_data = {{ group_info|safe }};
+    userid = {{ userid }};
+
+    if (group_data.length === 0) {
+        let groupSelect = document.getElementById("groupModalGroupSelect");
+        groupSelect.disabled = "true";
+        groupSelect.insertAdjacentHTML("beforeend", `<option value="0">Du bist in keiner Gruppe</option>`);
+        document.getElementById("groupModalBody").getElementsByTagName("h5").item(0).remove();
+        document.getElementById("groupModalBody").getElementsByTagName("ul").item(1).remove();
+        document.getElementById("memberAddButton").disabled = "true";
+        throw new Error("Nothing wrong, just stopping js");
+    }
+
+    userAdminGroups = [];
+    for (let i = 0; i < group_data.length; i++) {
+        for (let j = 0; j < group_data[i].members.length; j++) {
+            let member = group_data[i].members[j];
+            if (member.role === 1 && member.id === userid)
+                userAdminGroups.push(group_data[i].id);
+        }
+    }
+
+
+    groupSelect = document.getElementById("groupModalGroupSelect");
+    memberList = document.getElementById("groupMemberList");
+    memberListSplit = document.getElementById("groupMemberListSplit");
+    groupCreateForm = document.getElementById("groupCreateForm");
+    userAddForm = document.getElementById("userAddForm");
+    for (let i = 0; i < group_data.length; i++) {
+        groupSelect.insertAdjacentHTML("beforeend", `<option value="${i}">${group_data[i].title}</option>`);
+    }
+
+    function updateGroupModalList() {
+        memberList.innerHTML = "";
+        for (let i = 0; i < group_data[groupSelect.value].members.length; i++) {
+            let member = group_data[groupSelect.value].members[i];
+
+            let optionsHTML = `
+<div class="col-1" style="padding-right: 3px">
+    <button class="btn btn-outline-primary btn-sm float-end" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="2 2 12 13">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+    </button>
+</div>`;
+            let roleInfoColLength = 2;
+            if (!userAdminGroups.includes(group_data[groupSelect.value].id)) {
+                optionsHTML = "";
+                roleInfoColLength = 3;
+            }
+            if (member.id === userid) {
+                roleInfoColLength -= 1;
+                optionsHTML += `
+<div class="col-1" style="padding-right: 3px">
+    <form id="groupLeaveForm" action="{% url view currently_viewed %}" method="POST">
+        <input type="hidden" name="type" value="leaveGroup">
+        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
+        <button class="btn btn-outline-primary btn-sm float-end" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 6 16 6">
+                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+            </svg>
+        </button>
+    </form>
+</div>
+`;
+            }
+
+
+            let roleInfo = `
+<div class="col-${roleInfoColLength}">
+    <span class="align-content-end float-end" style="color: red">Admin</span>
+</div>`;
+            let insertPosition = "afterbegin";
+
+            if (member.role === 0) {
+                roleInfo = `<div class="col-${roleInfoColLength}"></div>`;
+                insertPosition = "beforeend";
+            }
+
+            memberList.insertAdjacentHTML(insertPosition, `
+<li class="list-group-item">
+    <div class="row align-items-center">
+        <div class="col-9 align-middle" style="padding-left: 0">
+            <span>${member.username}</span>
+        </div>
+        ${roleInfo}
+        ${optionsHTML}
+    </div>
+</li>`);
+        }
+    }
+
+    updateGroupModalList();
+
+    groupCreateForm.addEventListener("submit", function (event) {
+            let groupNameInput = document.getElementById("groupNameInput");
+            if (groupNameInput.value === "") {
+                event.preventDefault();
+                event.stopPropagation();
+                groupNameInput.classList.add("is-invalid");
+            }
+        }, false);
+    userAddForm.addEventListener("submit", function (event) {
+            let groupIdField = document.getElementById("memberAddGroupId");
+            groupIdField.value = group_data[parseInt(groupSelect.value)].id;
+
+            let usernameInput = document.getElementById("usernameInput");
+            if (usernameInput.value === "") {
+                event.preventDefault();
+                event.stopPropagation();
+                usernameInput.classList.add("is-invalid");
+            }
+        }, false);
+
+    groupLeaveForm = document.getElementById("groupLeaveForm");
+
+    </script>
 {% endblock %}

@@ -38,6 +38,13 @@
             line-height: 1.33;
             border-radius: 35px;
         }
+
+        .list-group-scroll {
+            max-height: 200px;
+            margin-bottom: 10px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 
     {% block head %}
@@ -54,5 +61,6 @@
 <!-- Other JS -->
 <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 
+{% block script_menu %}{% endblock %}
 {% block script %}{% endblock %}
 </html>

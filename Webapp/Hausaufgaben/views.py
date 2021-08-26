@@ -46,6 +46,7 @@ def get_menu_context(request, group):
         "groups": groups if len(groups) != 0 else None,
         "group_info": json.dumps(group_info),
         "username": user.username,
+        "userid": user.id,
         "currently_viewed": request.session.get("currently_viewed", group if groups.filter(id=group) else 0)
     }
 
@@ -184,6 +185,34 @@ def week_view(request, group=0):
                 http_redirect = True
             else:
                 http_redirect = True
+        elif request.POST["type"] == "createGroup":
+            group_name = request.POST["groupName"]
+
+            group_ = Group(title=group_name, admins=[user.id])
+            group_.save()
+            group_.members.add(user)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "addUser":
+            username = request.POST["username"]
+            group_id = int(request.POST["group"])
+
+            if User.objects.filter(username=username) and group_id != -1:
+                group_ = Group.objects.get(id=group_id)
+                group_.add_member(User.objects.get(username=username))
+                group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "leaveGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=int(group_))
+            print(group_.title)
+            group_.remove_member(user)
+            group_.save()
+
+            http_redirect = True
+
     elif request.method == "GET":
         request.session["weekview_week"] = 0
         request.session["weekview_year"] = 0
