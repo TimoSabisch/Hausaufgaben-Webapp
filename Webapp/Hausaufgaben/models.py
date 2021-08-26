@@ -51,19 +51,18 @@ class Group(models.Model):
     entries = models.ManyToManyField(Entry,
                                      blank=True)
 
-    def add_member(self, user: int, admin: bool = False):
+    def add_member(self, user: User, admin: bool = False):
         user = User.objects.get(id=user.id)
         if admin:
             self.admins.append(user.id)
         else:
             self.members.add(user)
 
-    def remove_member(self, user: int):
-        user = User.objects.get(id=user.id)
+    def remove_member(self, user: User):
         if user.id in self.admins:
             self.admins.remove(user.id)
-        elif user.id in self.members:
-            self.members.remove(User.objects.get(id=user.id))
+        if user in self.members.all():
+            self.members.remove(user)
 
     def add_entry(self, entry: Entry):
         if not self.entries.filter(id=entry.id):
