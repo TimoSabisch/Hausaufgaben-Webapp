@@ -18,16 +18,37 @@
                             </select>
                         </div>
                         <div class="col text-end">
-                            <button class="btn btn-primary btn-circle" style="padding: 4px 4px"  id="groupAddDDLink" data-bs-toggle="dropdown" aria-expanded="false">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
-                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                                </svg>
-                            </button>
-                            <ul class = "dropdown-menu dropdown-menu-end" aria-labelledby="groupAddDD" style="padding: 0">
-                                <li><button class="dropdown-item btn-sm" data-bs-target="#groupCreateModal" data-bs-toggle="modal">Gruppe erstellen</button></li>
-                                <li><hr class="dropdown-divider" style="margin: 0"></li>
-                                <li><button id="memberAddButton" class="dropdown-item btn-sm" data-bs-target="#memberAddModal" data-bs-toggle="modal">Mitglied hinzufügen</button></li>
-                            </ul>
+                            <div class="row">
+                                <div class="col-7"></div>
+                                <div class="col-2">
+                                    <form id="groupDeleteForm" action="{% url 'weekview' currently_viewed %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="type" value="deleteGroup">
+                                        <input id="groupDeleteGroupIdInput" type="hidden" name="group" value="">
+
+                                        <button type="submit" id="groupDeleteButton" class="btn btn-outline-danger btn-circle" style="padding: 4px 3px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+
+
+                                <div class="col-3">
+                                    <button class="btn btn-primary btn-circle" style="padding: 4px 3px"  id="groupAddDDLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                        </svg>
+                                    </button>
+                                    <ul class = "dropdown-menu dropdown-menu-end" aria-labelledby="groupAddDD" style="padding: 0">
+                                        <li><button class="dropdown-item btn-sm" data-bs-target="#groupCreateModal" data-bs-toggle="modal">Gruppe erstellen</button></li>
+                                        <li><hr class="dropdown-divider" style="margin: 0"></li>
+                                        <li><button id="memberAddButton" class="dropdown-item btn-sm" data-bs-target="#memberAddModal" data-bs-toggle="modal">Mitglied hinzufügen</button></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -198,6 +219,7 @@
     memberListSplit = document.getElementById("groupMemberListSplit");
     groupCreateForm = document.getElementById("groupCreateForm");
     userAddForm = document.getElementById("userAddForm");
+    groupDeleteForm = document.getElementById("groupDeleteForm");
     for (let i = 0; i < group_data.length; i++) {
         groupSelect.insertAdjacentHTML("beforeend", `<option value="${i}">${group_data[i].title}</option>`);
     }
@@ -208,6 +230,7 @@
             let member = group_data[groupSelect.value].members[i];
 
             let actionUrl = "{% url view currently_viewed %}"
+
             let optionsDD = `
 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberOptionDD" style="padding: 0">
     <form action="${actionUrl}" method="post">
@@ -319,6 +342,10 @@
                 event.stopPropagation();
                 usernameInput.classList.add("is-invalid");
             }
+        }, false);
+    groupDeleteForm.addEventListener("submit", function (event) {
+            let groupIdField = document.getElementById("groupDeleteGroupIdInput");
+            groupIdField.value = group_data[groupSelect.value].id;
         }, false);
 
     groupLeaveForm = document.getElementById("groupLeaveForm");

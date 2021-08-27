@@ -207,9 +207,14 @@ def week_view(request, group=0):
         elif request.POST["type"] == "leaveGroup":
             group_ = request.POST["group"]
             group_ = Group.objects.get(id=int(group_))
-            print(group_.title)
             group_.remove_member(user)
             group_.save()
+
+            if len(group_.members.all()) == 0:
+                group_.delete()
+            elif len(group_.admins) == 0:
+                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
+                group_.save()
 
             http_redirect = True
         elif request.POST["type"] == "setAdmin":
@@ -237,6 +242,12 @@ def week_view(request, group=0):
             user_ = User.objects.get(id=userid)
             group_.remove_member(user_)
             group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "deleteGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=group_)
+            group_.delete()
 
             http_redirect = True
 
