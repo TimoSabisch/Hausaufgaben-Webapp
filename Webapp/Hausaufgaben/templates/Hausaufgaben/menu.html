@@ -33,7 +33,7 @@
 
 
                     <h5 style="margin-bottom: 2px; margin-top: 10px">Mitglieder</h5>
-                    <ul id="groupMemberList" class="list-group list-group-flush list-group-scroll border" style="margin-top: 0">
+                    <ul id="groupMemberList" class="list-group list-group-flush list-group-scroll border" style="margin-top: 0; overflow-x: hidden">
                         <li id="groupMemberListSplit" class="hidden"></li>
                     </ul>
                 </div>
@@ -207,13 +207,49 @@
         for (let i = 0; i < group_data[groupSelect.value].members.length; i++) {
             let member = group_data[groupSelect.value].members[i];
 
+            let actionUrl = "{% url view currently_viewed %}"
+            let optionsDD = `
+<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberOptionDD" style="padding: 0">
+    <form action="${actionUrl}" method="post">
+        <input type="hidden" name="type" value="setAdmin">
+        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
+        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
+        <li><button class="dropdown-item btn-sm" type="submit">Admin hinzufügen</button></li>
+    </form>
+    <li><hr class="dropdown-divider" style="margin: 0"></li>
+    <form action="${actionUrl}" method="post">
+        <input type="hidden" name="type" value="kickUser">
+        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
+        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
+        <li><button id="memberKickButton" class="dropdown-item btn-sm" type="submit">Aus Gruppe entfernen</button></li>
+    </form>
+</ul>`
+            if (member.role === 1)
+                optionsDD = `
+<ul id="optionsDD" class="dropdown-menu dropdown-menu-end" aria-labelledby="memberOptionDD" style="padding: 0">
+    <form action="${actionUrl}" method="post">
+        <input type="hidden" name="type" value="removeAdmin">
+        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
+        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
+        <li><button class="dropdown-item btn-sm" type="submit">Admin entfernen</button></li>
+    </form>
+    <li><hr class="dropdown-divider" style="margin: 0"></li>
+    <form action="${actionUrl}" method="post">
+        <input type="hidden" name="type" value="kickUser">
+        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
+        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
+        <li><button id="memberKickButton" class="dropdown-item btn-sm" type="submit">Aus Gruppe entfernen</button></li>
+    </form>
+</ul>`
+
             let optionsHTML = `
 <div class="col-1" style="padding-right: 3px">
-    <button class="btn btn-outline-primary btn-sm float-end" type="button">
+    <button class="btn btn-outline-primary btn-sm float-end" data-bs-toggle="dropdown" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="2 2 12 13">
             <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
         </svg>
     </button>
+    ${optionsDD}
 </div>`;
             let roleInfoColLength = 2;
             if (!userAdminGroups.includes(group_data[groupSelect.value].id)) {
@@ -221,8 +257,8 @@
                 roleInfoColLength = 3;
             }
             if (member.id === userid) {
-                roleInfoColLength -= 1;
-                optionsHTML += `
+                roleInfoColLength = 2;
+                optionsHTML = `
 <div class="col-1" style="padding-right: 3px">
     <form id="groupLeaveForm" action="{% url view currently_viewed %}" method="POST">
         <input type="hidden" name="type" value="leaveGroup">
@@ -286,6 +322,7 @@
         }, false);
 
     groupLeaveForm = document.getElementById("groupLeaveForm");
+
 
     </script>
 {% endblock %}

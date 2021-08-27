@@ -74,7 +74,7 @@ class Group(models.Model):
             self.entries.remove(entry)
 
     def set_role(self, user: User, role: Role):
-        if role == self.Role.ADMIN and user.id in self.members:
+        if role == self.Role.ADMIN and user in self.members.all():
             self.admins.append(user.id)
         elif role == self.Role.MEMBER and user.id in self.admins:
             self.admins.remove(user.id)

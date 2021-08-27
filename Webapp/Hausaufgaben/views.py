@@ -212,6 +212,33 @@ def week_view(request, group=0):
             group_.save()
 
             http_redirect = True
+        elif request.POST["type"] == "setAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.ADMIN)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "removeAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.MEMBER)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "kickUser":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.remove_member(user_)
+            group_.save()
+
+            http_redirect = True
 
     elif request.method == "GET":
         request.session["weekview_week"] = 0
