@@ -200,6 +200,7 @@
         groupSelect.insertAdjacentHTML("beforeend", `<option value="0">Du bist in keiner Gruppe</option>`);
         document.getElementById("groupModalBody").getElementsByTagName("h5").item(0).remove();
         document.getElementById("groupModalBody").getElementsByTagName("ul").item(1).remove();
+        document.getElementById("groupDeleteForm").remove();
         document.getElementById("memberAddButton").disabled = "true";
         throw new Error("Nothing wrong, just stopping js");
     }
