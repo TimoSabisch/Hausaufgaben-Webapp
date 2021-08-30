@@ -247,7 +247,8 @@ def week_view(request, group=0):
         elif request.POST["type"] == "deleteGroup":
             group_ = request.POST["group"]
             group_ = Group.objects.get(id=group_)
-            group_.delete()
+            if user.id in group_.admins:
+                group_.delete()
 
             http_redirect = True
 
@@ -269,34 +270,306 @@ def week_view(request, group=0):
         return HttpResponse(template.render(context, request))
 
 
+@csrf_exempt
 def entry_view(request, group=0):
     if not request.user.is_authenticated:
         return redirect("login")
 
+    http_redirect = False
     user = request.user
-    template = loader.get_template("Hausaufgaben/entry_view.html")
+    if request.method == "POST":
+        if request.POST["type"] == "changeEntryDone":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            if user.id in entry.done_by:
+                entry.done_by.remove(user.id)
+            else:
+                entry.done_by.append(user.id)
+            entry.save()
 
+            http_redirect = True
+        elif request.POST["type"] == "editEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+            entry.title = title
+            entry.note = note
+            entry.date = date
+            if entry_type == "1":
+                entry.type = entry.EntryType.TASK
+            elif entry_type == "2":
+                entry.type = entry.EntryType.REMINDER
+            entry.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "deleteEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            entry.delete()
+
+            http_redirect = True
+        elif request.POST["type"] == "createEntry":
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            if title and date and entry_type:
+
+                date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+                if entry_type == "1":
+                    entry_type = Entry.EntryType.TASK
+                elif entry_type == "2":
+                    entry_type = Entry.EntryType.REMINDER
+
+                entry = Entry(title=title, note=note, date=date, owner=user, type=entry_type)
+                entry.save()
+
+                if group == 0:
+                    entry.privat_user = user
+                    entry.save()
+                else:
+                    Group.objects.get(id=group).add_entry(entry)
+
+                http_redirect = True
+            else:
+                http_redirect = True
+        elif request.POST["type"] == "createGroup":
+            group_name = request.POST["groupName"]
+
+            group_ = Group(title=group_name, admins=[user.id])
+            group_.save()
+            group_.members.add(user)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "addUser":
+            username = request.POST["username"]
+            group_id = int(request.POST["group"])
+
+            if User.objects.filter(username=username) and group_id != -1:
+                group_ = Group.objects.get(id=group_id)
+                group_.add_member(User.objects.get(username=username))
+                group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "leaveGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=int(group_))
+            group_.remove_member(user)
+            group_.save()
+
+            if len(group_.members.all()) == 0:
+                group_.delete()
+            elif len(group_.admins) == 0:
+                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
+                group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "setAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.ADMIN)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "removeAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.MEMBER)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "kickUser":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.remove_member(user_)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "deleteGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=group_)
+            if user.id in group_.admins:
+                group_.delete()
+
+            http_redirect = True
+
+    template = loader.get_template("Hausaufgaben/entry_view.html")
     context = {
         "view": "entryview"
     }
     context.update(get_menu_context(request, group))
+    context["view_data"] = json.dumps(get_view_data(request, group))
 
-    return HttpResponse(template.render(context))
+    if http_redirect:
+        return HttpResponseRedirect(reverse("entryview", args=(context["currently_viewed"],)))
+    else:
+        return HttpResponse(template.render(context, request))
 
 
+@csrf_exempt
 def day_view(request, group=0):
     if not request.user.is_authenticated:
         return redirect("login")
 
+    http_redirect = False
     user = request.user
-    template = loader.get_template("Hausaufgaben/day_view.html")
+    if request.method == "POST":
+        if request.POST["type"] == "changeEntryDone":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            if user.id in entry.done_by:
+                entry.done_by.remove(user.id)
+            else:
+                entry.done_by.append(user.id)
+            entry.save()
 
+            http_redirect = True
+        elif request.POST["type"] == "editEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+            entry.title = title
+            entry.note = note
+            entry.date = date
+            if entry_type == "1":
+                entry.type = entry.EntryType.TASK
+            elif entry_type == "2":
+                entry.type = entry.EntryType.REMINDER
+            entry.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "deleteEntry":
+            entry = request.POST["entry"]
+            entry = Entry.objects.get(id=entry)
+            entry.delete()
+
+            http_redirect = True
+        elif request.POST["type"] == "createEntry":
+            title = request.POST["title"]
+            note = request.POST["note"]
+            date = request.POST["date"]
+            entry_type = request.POST["entryType"]
+
+            if title and date and entry_type:
+
+                date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+                if entry_type == "1":
+                    entry_type = Entry.EntryType.TASK
+                elif entry_type == "2":
+                    entry_type = Entry.EntryType.REMINDER
+
+                entry = Entry(title=title, note=note, date=date, owner=user, type=entry_type)
+                entry.save()
+
+                if group == 0:
+                    entry.privat_user = user
+                    entry.save()
+                else:
+                    Group.objects.get(id=group).add_entry(entry)
+
+                http_redirect = True
+            else:
+                http_redirect = True
+        elif request.POST["type"] == "createGroup":
+            group_name = request.POST["groupName"]
+
+            group_ = Group(title=group_name, admins=[user.id])
+            group_.save()
+            group_.members.add(user)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "addUser":
+            username = request.POST["username"]
+            group_id = int(request.POST["group"])
+
+            if User.objects.filter(username=username) and group_id != -1:
+                group_ = Group.objects.get(id=group_id)
+                group_.add_member(User.objects.get(username=username))
+                group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "leaveGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=int(group_))
+            group_.remove_member(user)
+            group_.save()
+
+            if len(group_.members.all()) == 0:
+                group_.delete()
+            elif len(group_.admins) == 0:
+                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
+                group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "setAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.ADMIN)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "removeAdmin":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.set_role(user_, group_.Role.MEMBER)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "kickUser":
+            group_ = request.POST["group"]
+            userid = request.POST["user"]
+            group_ = Group.objects.get(id=group_)
+            user_ = User.objects.get(id=userid)
+            group_.remove_member(user_)
+            group_.save()
+
+            http_redirect = True
+        elif request.POST["type"] == "deleteGroup":
+            group_ = request.POST["group"]
+            group_ = Group.objects.get(id=group_)
+            if user.id in group_.admins:
+                group_.delete()
+
+            http_redirect = True
+
+    template = loader.get_template("Hausaufgaben/day_view.html")
     context = {
         "view": "dayview"
     }
     context.update(get_menu_context(request, group))
+    context["view_data"] = json.dumps(get_view_data(request, group))
 
-    return HttpResponse(template.render(context, request))
+    if http_redirect:
+        return HttpResponseRedirect(reverse("dayview", args=(context["currently_viewed"],)))
+    else:
+        return HttpResponse(template.render(context, request))
 
 
 @csrf_exempt

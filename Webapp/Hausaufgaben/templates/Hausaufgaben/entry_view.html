@@ -3,5 +3,518 @@
 {% block title %} Eintrags-Ansicht {% endblock %}
 
 {% block content %}
-    Eintrags-Ansicht
+    <div id="contentContainer" class="container-fluid" style="width: 1000px">
+        <div class="row">
+            <div class="col"></div>
+            <div class="col" style="text-align: center; margin: 5px">
+                <button id="showMoreButton" class="btn btn-outline-dark btn-sm" style="align-self: center" onclick="showMore(0)">
+                    <span>Ältere Anzeigen</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-bar-up" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 10a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V9.5a.5.5 0 0 0 .5.5zm-7 2.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="col" style="text-align: end; margin: 5px">
+                <a class="btn btn-primary btn-circle btn-sm" href="{% url 'entryview' currently_viewed %}" style="padding: 4px 3px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"/>
+                        <path fill-rule="evenodd" d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z"/>
+                    </svg>
+                </a>
+                <button class="btn btn-primary btn-circle btn-sm" onclick="entryCreateModal()" style="padding: 1px 1px">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="dayContainer" class="container-fluid border" style="width: 100%; max-height: 750px; overflow-x: hidden; overflow-y: auto; padding: 0">
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+    function getLang() {
+      if (navigator.languages !== undefined)
+        return navigator.languages[0];
+      return navigator.language;
+    }
+    const locale = getLang();
+    function jsDayToNormal(day) {
+        if (day === 0)
+            return 6;
+        else
+            return day-1;
+    }
+    function normalToJsDay(day) {
+        if (day === 6)
+            return 0;
+        else
+            return day+1;
+    }
+    Date.prototype.getWeekNumber = function(){
+        let d = new Date(this.getTime());
+        let week1 = new Date(d.getFullYear(), 0, 1);
+        if (week1.getDay() !== 1) {
+            week1 = new Date(d.getFullYear(), 0, 8-jsDayToNormal(week1.getDay()));
+        }
+        return Math.floor(((d.getTime()-week1.getTime())/86400000/7))+1; // Misscalc
+    };
+    Date.prototype.getDayName = function () {
+        return this.toLocaleDateString(locale, {weekday: 'long'});
+    }
+    Date.prototype.getDayNameShort = function () {
+        return this.toLocaleDateString(locale, {weekday: 'short'});
+    }
+    Date.prototype.getTwoDigitDate = function () {
+        return ("0" + this.getDate()).slice(-2);
+    }
+    Date.prototype.getTwoDigitMonth = function () {
+        return ("0" + (this.getMonth()+1)).slice(-2);
+    }
+    function expandTextarea(id1, id2) {
+        document.getElementById(id1).addEventListener("shown.bs.modal", async function() {
+            let textarea = document.getElementById(id2);
+            textarea.style.overflow = 'hidden';
+            textarea.style.height = 0;
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }, false);
+        document.getElementById(id2).addEventListener("keyup", async function() {
+            let textarea = this;
+            textarea.style.overflow = 'hidden';
+            textarea.style.height = 0;
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }, false);
+        document.getElementById(id2).addEventListener("keypress", async function() {
+            let textarea = this;
+            textarea.style.overflow = 'hidden';
+            textarea.style.height = 0;
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }, false);
+    }
+    function entryEditDateChange(id) {
+        let date = new Date(document.getElementById("entryEditDate" + id).value);
+        document.getElementById("entryEditWeek" + id).value = "Woche " + date.getWeekNumber();
+        document.getElementById("entryEditDay" + id).value = date.getDayName();
+    }
+    function entryCreateModal() {
+        try {
+                document.getElementById("entryCreateModal").remove();
+            } catch(e) {}
+
+            let date = new Date();
+            let dateString = `${date.getFullYear()}-${date.getTwoDigitMonth()}-${date.getTwoDigitDate()}`;
+
+            let modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "entryCreateModal";
+            modal.tabIndex = -1;
+            modal.setAttribute("aria-hidden", "true")
+            modal.innerHTML = `
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" id="entryCreateModalContent">
+        <form action="${postURL}" method="post">
+            <div class="modal-header" style="padding: 10px 10px">
+                <input required name="title" id="titleEntryCreate" maxlength="50" class="textarea-autosize" type="text" aria-label="titleEntryCreate" style="resize: none; width: 100%" placeholder="Titel">
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Notiz</span>
+                        </div>
+                        <div class="col-10">
+                            <textarea name="note" id="noteEntryCreate" class="textarea-autosize" type="text" aria-label="noteEntryCreate" style="resize: none" placeholder="Notiz"></textarea>
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Datum</span>
+                        </div>
+                        <div class="col-4">
+                            <input required name="date" id="dateEntryCreate" type="date" onchange="entryCreateDateChange(${this.id})" value="${dateString}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="weekEntryCreate" type="text" readonly aria-label="weekEntryCreate" value="Woche ${date.getWeekNumber()}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="dayEntryCreate" type="text" readonly aria-label="dayEntryCreate" value="${date.getDayName()}" style="width: 100%; align-self: end">
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div id="entryCreateTypeRow" class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Typ</span>
+                        </div>
+                        <div class="col-10">
+                            <select name="entryType" class="form-select-sm" aria-label="typeSelectEntryCreate">
+                                <option value="1">Aufgabe</option>
+                                <option value="2">Erinnerung</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 10px 10px">
+                <input name="type" value="createEntry" hidden="true">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+                <button class="btn btn-primary" onclick="postEntryCreate()" >Erstellen</button>
+            </div>
+        </form>
+    </div>
+</div>`
+
+            document.getElementById("contentContainer").insertAdjacentHTML("beforebegin", modal.outerHTML);
+            expandTextarea(modal.id, `noteEntryCreate`);
+
+            modal = new bootstrap.Modal(document.getElementById("entryCreateModal"), false);
+            modal.show();
+    }
+
+    django_data = {{ view_data|safe }};
+    postURL = "{% url 'entryview' currently_viewed %}"
+    user = django_data.user;
+    entries = [];
+
+    class Entry {
+        constructor(id, title, note, date, type, done, creator_id, creator_name) {
+            this.id = id;
+            this.title = title;
+            this.note = note;
+            this.date = date;
+            date.setHours(12);
+            date.setMinutes(0);
+            date.setSeconds(0);
+            date.setMilliseconds(0);
+            this.dateString = `${this.date.getDate()}.${this.date.getMonth()+1}.${this.date.getFullYear()}`;
+            this.dateStringView = `${this.date.getDayName()} ${this.date.getTwoDigitDate()}.${this.date.getTwoDigitMonth()}.`
+            this.week = this.date.getWeekNumber()
+            this.type = type;
+            this.done = done;
+            this.creatorId = creator_id;
+            this.creatorName = creator_name;
+
+            this.html = "";
+        }
+
+        createDetails() {
+            try {
+                document.getElementById("entryModal" + this.id).remove();
+            } catch(e) {}
+
+            let buttonType = "danger";
+            if (this.done)
+                buttonType = "success";
+
+            let editButton = "";
+            let delButton = "";
+            if (user === this.creatorId) {
+                editButton = `
+<button id="entryEditButton${this.id}" class="btn btn-outline-secondary" style="height: 37px; width: 37px; padding: 1px;" data-bs-target="#entryEditModal${this.id}" data-bs-toggle="modal" data-bs-dismiss="modal">
+    <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+    </svg>
+</button>
+`;
+                delButton = `
+<form action="${postURL}" method="post">
+    <input type="hidden" name="type" value="deleteEntry">
+    <input type="hidden" name="entry" value="${this.id}">
+
+    <button type="submit" id="entryCheckButton${this.id}" class="btn btn-outline-${buttonType}" style="height: 37px; width: 37px; padding: 1px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+        </svg>
+    </button>
+</form>`
+            }
+
+            let modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "entryModal" + this.id;
+            modal.tabIndex = -1;
+            modal.setAttribute("aria-hidden", "true")
+            modal.innerHTML = `
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header" style="padding: 10px 10px">
+            <h5 class="modal-title" style="width: 100%">${this.title}</h5>
+            <form action="${postURL}" method="post">
+                <input type="hidden" name="type" value="changeEntryDone">
+                <input type="hidden" name="entry" value="${this.id}">
+
+                <button type="submit" id="entryCheckButton${this.id}" class="btn btn-outline-${buttonType}" style="height: 30px; width: 30px; padding: 1px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                        <path d="M13.485 1.431a1.473 1.473 0 0 1 2.104 2.062l-7.84 9.801a1.473 1.473 0 0 1-2.12.04L.431 8.138a1.473 1.473 0 0 1 2.084-2.083l4.111 4.112 6.82-8.69a.486.486 0 0 1 .04-.045z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+        <div class="modal-body">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Notiz</span>
+                    </div>
+                    <div class="col-10">
+                        <textarea id="noteArea${this.id}" class="textarea-autosize" type="text" readonly aria-label="note${this.id}" style="resize: none">${this.note}</textarea>
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Datum</span>
+                    </div>
+                    <div class="col-4">
+                        <input type="text" readonly aria-label="date${this.id}" value="${this.dateString}" style="width: 100%">
+                    </div>
+                    <div class="col-3">
+                        <input type="text" readonly aria-label="date${this.id}" value="Woche ${this.week}" style="width: 100%">
+                    </div>
+                    <div class="col-3">
+                        <input type="text" readonly aria-label="date${this.id}" value="${this.date.getDayName()}" style="width: 100%; align-self: end">
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Typ</span>
+                    </div>
+                    <div class="col-10">
+                        <input type="text" readonly aria-label="type${this.id}" value="${this.type}" style="width: 100px">
+                    </div>
+                </div>
+
+                <hr class="mt-2 mb-2">
+
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="align-middle">Ersteller</span>
+                    </div>
+                    <div class="col-10">
+                        <input type="text" readonly aria-label="creator${this.id}" value="${this.creatorName}" style="width: 100px">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 10px 10px">
+            ${delButton}
+            ${editButton}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+        </div>
+    </div>
+</div>`
+
+            document.getElementById("contentContainer").insertAdjacentHTML("beforebegin", modal.outerHTML);
+            expandTextarea(modal.id, `noteArea${this.id}`);
+        }
+
+        createEdit() {
+            try {
+                document.getElementById("entryEditModal" + this.id).remove();
+            } catch(e) {}
+            let modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "entryEditModal" + this.id;
+            modal.tabIndex = -1;
+            modal.setAttribute("aria-hidden", "true")
+            modal.innerHTML = `
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <form action="${postURL}" method="post">
+            <div class="modal-header" style="padding: 10px 10px">
+                <input name="title" id="titleEditArea${this.id}" maxlength="50" class="textarea-autosize" type="text" aria-label="titleEdit${this.id}" style="resize: none; width: 100%" value="${this.title}">
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Notiz</span>
+                        </div>
+                        <div class="col-10">
+                            <textarea name="note" id="noteEditArea${this.id}" class="textarea-autosize" type="text" aria-label="noteEdit${this.id}" style="resize: none">${this.note}</textarea>
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Datum</span>
+                        </div>
+                        <div class="col-4">
+                            <input name="date" id="entryEditDate${this.id}" type="date" onchange="entryEditDateChange(${this.id})" value="${this.date.getFullYear()}-${("0" + (this.date.getMonth()+1)).slice(-2)}-${this.date.getTwoDigitDate()}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="entryEditWeek${this.id}" type="text" readonly aria-label="dateEdit${this.id}" value="Woche ${this.week}" style="width: 100%">
+                        </div>
+                        <div class="col-3">
+                            <input id="entryEditDay${this.id}" type="text" readonly aria-label="dateEdit${this.id}" value="${this.date.getDayName()}" style="width: 100%; align-self: end">
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Typ</span>
+                        </div>
+                        <div class="col-10">
+                            <select name="entryType" class="form-select-sm" aria-label="typeSelect${this.id}">
+                                <option selected>${this.type}</option>
+                                <option value="1">Aufgabe</option>
+                                <option value="2">Erinnerung</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="mt-2 mb-2">
+
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <span class="align-middle">Ersteller</span>
+                        </div>
+                        <div class="col-10">
+                            <input type="text" readonly aria-label="creatorEdit${this.id}" value="${this.creatorName}" style="width: 100px">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 10px 10px">
+                <input type="hidden" name="type" value="editEntry">
+                <input type="hidden" name="entry" value="${this.id}">
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+                <button type="submit" class="btn btn-primary" >Übernehmen</button>
+            </div>
+        </form>
+    </div>
+</div>`
+
+            document.getElementById("contentContainer").insertAdjacentHTML("beforebegin", modal.outerHTML);
+            expandTextarea(modal.id, `noteEditArea${this.id}`);
+        }
+
+        createHTML () {
+            this.createDetails();
+            this.createEdit();
+
+            let buttonType = "danger";
+            if (this.done)
+                buttonType = "success";
+            this.html = `
+<div id="entryPreview${this.id}" class="row align-items-center" style="height: 100%">
+    <div class="row">
+        <div class="col-4">
+            <h3>${this.dateStringView}</h3>
+        </div>
+        <div class="col-8 align-middle">
+            <div class="row align-items-center" style="height: 100%">
+                <div class="col-11">
+                    <input type="button" data-bs-toggle="modal" data-bs-target="#entryModal${this.id}" style="width: 100%; height: 30px; text-align: start" readonly id="entry${this.id}" aria-label="Entry${this.id}" value="${this.title}">
+                </div>
+                <div class="col-1" style="padding: 1px 1px;">
+                    <form action="${postURL}" method="post">
+                        <input type="hidden" name="type" value="changeEntryDone">
+                        <input type="hidden" name="entry" value="${this.id}">
+
+                        <button type="submit" id="entryCheckButton${this.id}" class="btn btn-outline-${buttonType}" style="height: 30px; width: 30px; padding: 1px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                <path d="M13.485 1.431a1.473 1.473 0 0 1 2.104 2.062l-7.84 9.801a1.473 1.473 0 0 1-2.12.04L.431 8.138a1.473 1.473 0 0 1 2.084-2.083l4.111 4.112 6.82-8.69a.486.486 0 0 1 .04-.045z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;
+        }
+    }
+    for (let i = 0; i < django_data.entries.length; i++) {
+        let entry = django_data.entries[i];
+        let date = new Date(entry.date);
+        date.setHours(12);
+        date.setMinutes(0);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+
+        entries.push(new Entry(entry.id, entry.title, entry.note, date, entry.type, entry.done, entry.creator.id, entry.creator.username));
+    }
+    
+    entries.sort(function (a, b) {
+        return a.date - b.date;
+    });
+
+    today = new Date();
+    today.setHours(12);
+    today.setMinutes(0);
+    today.setSeconds(0);
+    today.setMilliseconds(0);
+    startIndexDate = new Date(today);
+    endIndexDate = new Date(today);
+
+    entries.forEach(function (entry) {
+        if (entry.date >= today) {
+            entry.createHTML();
+            dayContainer.innerHTML += entry.html;
+        }
+    })
+
+    endIndexDate.setDate(endIndexDate.getDate()+20);
+    
+    function showMore(type) {
+        if (type === 0) {
+            for (let i = 0; i < entries.length; i++) {
+                let entry = entries[i];
+                if (entry.date < today) {
+                    let scrollHeight = dayContainer.scrollHeight;
+                    let scrollTop = dayContainer.scrollTop;
+
+                    entry.createHTML();
+                    dayContainer.innerHTML = `${entry.html}${dayContainer.innerHTML}`;
+
+                    dayContainer.scrollTop = scrollTop+(dayContainer.scrollHeight-scrollHeight);
+                }
+            }
+            document.getElementById("showMoreButton").innerHTML = `
+<span>Ältere nicht mehr Anzeigen</span>
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-bar-down" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zM8 6a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 12.293V6.5A.5.5 0 0 1 8 6z"></path>
+</svg>`
+            document.getElementById("showMoreButton").setAttribute("onclick", "showMore(1)");
+        }
+        else {
+            for (let i = 0; i < entries.length; i++) {
+                let entry = entries[i];
+                if (entry.date < today) {
+                    document.getElementById(`entryPreview${entry.id}`).remove();
+                }
+            }
+
+            document.getElementById("showMoreButton").innerHTML = `
+<span>Ältere Anzeigen</span>
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-bar-up" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8 10a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V9.5a.5.5 0 0 0 .5.5zm-7 2.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"></path>
+</svg>`
+            document.getElementById("showMoreButton").setAttribute("onclick", "showMore(0)");
+        }
+    }
+
+    </script>
 {% endblock %}
