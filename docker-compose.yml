@@ -1,5 +1,9 @@
 version: '3'
 
+volumes:
+  caddy_data:
+  caddy_config:
+
 services:
   app:
     image: timosabisch/hausaufgaben-webapp
@@ -23,3 +27,13 @@ services:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
       timeout: 5s
       retries: 12
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    command: caddy reverse-proxy --to app:8000
