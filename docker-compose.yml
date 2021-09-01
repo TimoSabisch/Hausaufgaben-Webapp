@@ -12,6 +12,7 @@ services:
       - "8001:8000"
     environment:
       - "MYSQL_PASSWORD"
+      - "DJANGO_SETTINGS_MODULE"
     depends_on:
       mysql:
         condition: service_healthy
