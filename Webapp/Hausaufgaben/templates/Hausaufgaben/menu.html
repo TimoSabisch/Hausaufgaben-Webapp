@@ -5,6 +5,120 @@
 {% block body %}
 <body>
 <div id="content">
+    <div id="helpModal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="padding: 10px 10px">
+                    <h3>Hilfe</h3>
+                </div>
+                <div id="groupModalBody" class="modal-body">
+                    <div class="container-fluid" style="max-height: 500px; overflow-y: auto; overflow-x: fragments">
+                        <h3><strong>Content</strong></h3>
+
+                        <a href="#menü">Menü</a><br>
+                        <ul>
+                            <li><a href="#bereiche">Bereiche</a></li>
+                            <li><a href="#ansichten">Ansichten</a></li>
+                            <li><a href="#benutzermenü">Benutzer-Menü</a></li>
+                            <li><a href="#gruppenmenü">Gruppen-Menü</a></li>
+                        </ul>
+
+                        <a href="#ansichten2">Ansichten</a><br>
+                        <ul>
+                            <li><a href="#wochenasnicht">Wochen-Ansicht</a></li>
+                            <li><a href="#tagesansicht">Tages-Ansicht</a></li>
+                            <li><a href="#eintragsansicht">Eintrags-Ansicht</a></li>
+                        </ul>
+
+
+
+
+                        <a name="features"></a>
+                        <h3><strong>Features</strong></h3>
+
+                        <a name="menü"></a>
+                        <h4><strong>Menü</strong></h4>
+
+                        <a name="bereiche"></a>
+                        <h5><strong>Bereiche</strong></h5>
+                        <p>Im Bereich-Dropdown oben links kannst du den Bereich, den du dir anschauen möchtest auswählen.</p>
+
+                        <a name="ansichten"></a>
+                        <h5><strong>Ansichten</strong></h5>
+                        <p>Mit den drei Knöpfe auf der rechten Seite kannst du die Ansicht wechseln.<br>
+                            Es gibt drei ansichten (von links nach rechts):</p>
+                        <ul>
+                            <li><strong>Wochen-Ansicht</strong> (Aufgaben in Wochen gruppiert)</li>
+                            <li><strong>Tages-Ansicht</strong> (Tage aufgelistet)</li>
+                            <li><strong>Eintrags-Ansicht</strong> (Aufgaben aufgelistet)</li>
+                        </ul>
+
+                        <a name="benutzermenü"></a>
+                        <h5><strong>Benutzer-Menü</strong></h5>
+                        <p>Im Benutzer-Menü kannst du:</p>
+                        <ul>
+                            <li>dich mit <strong>abmelden</strong> aus deinem Account ausloggen</li>
+                            <li>mit <strong>Gruppen</strong> das Gruppen-Menü öffnen</li>
+                            <li>mit <strong>Hilfe</strong> diese Hilfe anzeigen</li>
+                        </ul>
+
+                        <a name="gruppenmenü"></a>
+                        <h5><strong>Gruppen-Menü</strong></h5>
+                        <p>Im Gruppen menü kannst du oben rechts eine <strong>Gruppe</strong> zum Anzeigen <strong>auswähle</strong>.<br>
+                            Rechts daneben kannst du die ausgewählte <strong>Gruppe löschen</strong>.<br>
+                            Rechts daneben kannst du:</p>
+                        <ul>
+                            <li>eine Neue <strong>gruppe erstellen</strong></li>
+                            <li>ein <strong>Mitglied</strong> der ausgewählten Gruppe <strong>hinzufügen</strong></li>
+                        </ul>
+                        <p>Darunter sind alle Mitglieder der ausgewählten Gruppe aufgelistet.</p>
+                        <p>Du selber kannst die Gruppe verlassen, indem du dich in dieser Liste suchst und auf den Knopf auf der Rechten seite drückst.</p>
+                        <p>Wenn du admin der Gruppe bist, ist neben anderen Mitgliedern auch ein Knopf mit dem du:</p>
+                        <ul>
+                            <li>die <strong>Rolle</strong> des Mitglieds <strong>ändern</strong> kannst</li>
+                            <li>das <strong>Mitglied</strong> aus der Gruppe <strong>entfernen</strong> kannst</li>
+                        </ul>
+
+                        <a name="ansichten2"></a>
+                        <h4><strong>Ansichten</strong></h4>
+
+                        <a name="wochenasnicht"></a>
+                        <h5><strong>Wochen-Ansicht</strong></h5>
+                        <p>In der Wochen-Ansicht siehst du eine Woche mit ihren Tagen. Unter den Tagen sind die Einträge des Tages aufgelistet.</p>
+                        <p>Du kannst oben mit den Pfeil-Knöpfen die angezeigte Woche wechseln.</p>
+                        <p>Mit <button class="btn btn-primary btn-circle btn-sm" style="padding: 0 1px; width: 20px; height: 20px">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                                    </svg>
+                                </button> kannst du einen Neuen eintrag erstellen.</p>
+
+                        <a name="tagesansicht"></a>
+                        <h5><strong>Tages-Ansicht</strong></h5>
+                        <p>In der Tages-Ansicht siehst du Tage aufgelistet und rechts neben ihnen die Einträge des Tages.</p>
+                        <p>Du kannst unten und oben mit "Weitere Anzeigen" und "Ältere Anzeigen", weitere Tage anzeigen lassen.</p>
+                        <p>Mit <button class="btn btn-primary btn-circle btn-sm" style="padding: 0 1px; width: 20px; height: 20px">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                                    </svg>
+                                </button> kannst du einen Neuen eintrag erstellen.</p>
+
+                        <a name="eintragsansicht"></a>
+                        <h5><strong>Eintrags-Ansicht</strong></h5>
+                        <p>In der Eintrags-Ansicht siehst du alle Einträge aufgelistet.</p>
+                        <p>Um ältere Einträge anzuschauen, kannst du oben "Ältere Anzeigen" anklicken.</p>
+                        <p>Mit <button class="btn btn-primary btn-circle btn-sm" style="padding: 0 1px; width: 20px; height: 20px">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="2 2 12 12">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                                    </svg>
+                                </button> kannst du einen Neuen eintrag erstellen.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 10px 10px">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zurück</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="groupModal" tabindex="-1" class="modal fade" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -120,7 +234,7 @@
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item dropdown">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="groupDDMenuLink1" data-bs-toggle="dropdown" aria-expanded="false">Ansicht</button>
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="groupDDMenuLink1" data-bs-toggle="dropdown" aria-expanded="false">Bereich</button>
                         <ul class="dropdown-menu" aria-labelledby="groupDDMenuLink1">
                             <li><a class="dropdown-item {% if currently_viewed == 0 %}active{% endif %}" href="{% url view 0 %}">Privat</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -173,6 +287,8 @@
                             <li><a class="dropdown-item" href="{% url "logout" %}">Abmelden</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><button class="dropdown-item" data-bs-target="#groupModal" data-bs-toggle="modal">Gruppen</button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" data-bs-target="#helpModal" data-bs-toggle="modal">Hilfe</button></li>
                         </ul>
                     </li>
                 </ul>
@@ -192,6 +308,7 @@
 {% block script_menu %}
     <script>
     group_data = {{ group_info|safe }};
+    postURL = "{% url view currently_viewed %}"
     userid = {{ userid }};
 
     if (group_data.length === 0) {
@@ -350,7 +467,6 @@
         }, false);
 
     groupLeaveForm = document.getElementById("groupLeaveForm");
-
 
     </script>
 {% endblock %}
