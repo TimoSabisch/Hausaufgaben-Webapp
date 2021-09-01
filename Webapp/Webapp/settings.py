@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': 'webappdb',
         'USER': 'dbadmin',
         'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
-        'HOST': 'mysql',
+        'HOST': os.environ.get('MYSQL_HOST'),
         'PORT': '3306',
     }
 }

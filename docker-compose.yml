@@ -36,4 +36,4 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-    command: caddy reverse-proxy --to app:8000
+    command: caddy reverse-proxy --from ${HOST_FQDN} --to app:8000
