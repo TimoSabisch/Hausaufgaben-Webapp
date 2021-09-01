@@ -17,7 +17,8 @@ COPY . .
 WORKDIR /app/Webapp
 
 RUN set -ex &&\
-    python -m compileall .
+    python -m compileall . &&\
+    python manage.py collectstatic
 
 EXPOSE 8000
 
