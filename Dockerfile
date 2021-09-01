@@ -16,6 +16,8 @@ COPY . .
 
 WORKDIR /app/Webapp
 
+ENV DJANGO_SETTINGS_MODULE=Webapp.settings_prod
+
 RUN set -ex &&\
     python -m compileall . &&\
     python manage.py collectstatic
