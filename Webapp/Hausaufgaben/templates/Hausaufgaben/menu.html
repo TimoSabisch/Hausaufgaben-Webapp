@@ -135,18 +135,12 @@
                             <div class="row">
                                 <div class="col-7"></div>
                                 <div class="col-2">
-                                    <form id="groupDeleteForm" action="{% url 'weekview' currently_viewed %}" method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="type" value="deleteGroup">
-                                        <input id="groupDeleteGroupIdInput" type="hidden" name="group" value="">
-
-                                        <button type="submit" id="groupDeleteButton" class="btn btn-outline-danger btn-circle" style="padding: 4px 3px;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                            </svg>
-                                        </button>
-                                    </form>
+                                    <button type="button" id="groupDeleteButton" class="btn btn-outline-danger btn-circle" style="padding: 4px 3px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                        </svg>
+                                    </button>
                                 </div>
 
 
@@ -186,19 +180,16 @@
                     <h5>Gruppe erstellen</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="groupCreateForm" action="{% url view currently_viewed %}" method="post" novalidate>
-                    <input type="hidden" name="type" value="createGroup">
-                    <div id="groupCreateModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
-                        <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
-                            <span class="input-group-text" style="width: 22%">Name</span>
-                            <input class="form-control has-validation" id="groupNameInput" name="groupName" type="text" aria-label="groupName" placeholder="GruppenName" value="" required>
-                            <div class="invalid-feedback">Gib einen GruppenNamen an.</div>
-                        </div>
-                        <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
-                            <button class="btn btn-primary btn-sm mt-0" type="submit" style="margin-bottom: 0; width: 40%">Erstellen</button>
-                        </div>
+                <div id="groupCreateModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
+                    <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
+                        <span class="input-group-text" style="width: 22%">Name</span>
+                        <input class="form-control has-validation" id="groupNameInput" name="groupName" type="text" aria-label="groupName" placeholder="GruppenName" value="" required>
+                        <div class="invalid-feedback">Gib einen GruppenNamen an.</div>
                     </div>
-                </form>
+                    <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
+                        <button id="groupCreateButton" class="btn btn-primary btn-sm mt-0" type="button" style="margin-bottom: 0; width: 40%">Erstellen</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -311,36 +302,15 @@
     postURL = "{% url view currently_viewed %}"
     userid = {{ userid }};
 
-    if (group_data.length === 0) {
-        let groupSelect = document.getElementById("groupModalGroupSelect");
-        groupSelect.disabled = "true";
-        groupSelect.insertAdjacentHTML("beforeend", `<option value="0">Du bist in keiner Gruppe</option>`);
-        document.getElementById("groupModalBody").getElementsByTagName("h5").item(0).remove();
-        document.getElementById("groupModalBody").getElementsByTagName("ul").item(1).remove();
-        document.getElementById("groupDeleteForm").remove();
-        document.getElementById("memberAddButton").disabled = "true";
-        throw new Error("Nothing wrong, just stopping js");
-    }
-
     userAdminGroups = [];
-    for (let i = 0; i < group_data.length; i++) {
-        for (let j = 0; j < group_data[i].members.length; j++) {
-            let member = group_data[i].members[j];
-            if (member.role === 1 && member.id === userid)
-                userAdminGroups.push(group_data[i].id);
-        }
-    }
-
 
     groupSelect = document.getElementById("groupModalGroupSelect");
     memberList = document.getElementById("groupMemberList");
     memberListSplit = document.getElementById("groupMemberListSplit");
-    groupCreateForm = document.getElementById("groupCreateForm");
     userAddForm = document.getElementById("userAddForm");
-    groupDeleteForm = document.getElementById("groupDeleteForm");
-    for (let i = 0; i < group_data.length; i++) {
-        groupSelect.insertAdjacentHTML("beforeend", `<option value="${i}">${group_data[i].title}</option>`);
-    }
+    groupDeleteButton = document.getElementById("groupDeleteButton");
+    groupCreateModal = document.getElementById("groupCreateModal")
+    groupCreateButton = document.getElementById("groupCreateButton");
 
     function updateGroupModalList() {
         memberList.innerHTML = "";
@@ -439,16 +409,90 @@
 </li>`);
         }
     }
+    function updateGroupModal() {
+        groupSelect.innerHTML = "";
+        if (group_data.length === 0) {
+            groupSelect.disabled = "true";
+            groupSelect.insertAdjacentHTML("beforeend", `<option value="0">Du bist in keiner Gruppe</option>`);
 
-    updateGroupModalList();
-
-    groupCreateForm.addEventListener("submit", function (event) {
-            let groupNameInput = document.getElementById("groupNameInput");
-            if (groupNameInput.value === "") {
-                event.preventDefault();
-                event.stopPropagation();
-                groupNameInput.classList.add("is-invalid");
+            try{
+                document.getElementById("groupModalBody").getElementsByTagName("h5").item(0).remove();
+                document.getElementById("groupModalBody").getElementsByTagName("ul").item(1).remove();
+                document.getElementById("groupDeleteForm").remove();
+                document.getElementById("memberAddButton").disabled = "true";
+            } catch (e) {}
+        }
+        else {
+            userAdminGroups.length = 0;
+            for (let i = 0; i < group_data.length; i++) {
+                for (let j = 0; j < group_data[i].members.length; j++) {
+            let member = group_data[i].members[j];
+            if (member.role === 1 && member.id === userid)
+                userAdminGroups.push(group_data[i].id);
+                }
             }
+
+            for (let i = 0; i < group_data.length; i++) {
+                groupSelect.insertAdjacentHTML("beforeend", `<option value="${i}">${group_data[i].title}</option>`);
+            }
+
+            updateGroupModalList();
+        }
+    }
+    function getAndUpdateGroupData() {
+        let data = new FormData()
+        data.append("type", "getGroupData")
+
+        fetch("{% url "index" %}", {
+            method: "POST",
+            body: data
+        })
+        .then(res => res.json())
+        .then(function (res) {
+            groups = res.groups;
+            updateGroupModal();
+            group_data.length = 0;
+
+            for (let i = 0; i < groups.length; i++) {
+                group_data.push(groups[i]);
+            }
+            updateGroupModal();
+        })
+    }
+    function sendData(data) {
+
+        fetch("{% url "index" %}", {
+            method: "POST",
+            body: data
+        })
+    }
+    updateGroupModal();
+
+    groupCreateButton.addEventListener("click", function (event) {
+        let groupNameInput = document.getElementById("groupNameInput");
+        if (groupNameInput.value === "") {
+            groupNameInput.classList.add("is-invalid");
+        }
+        else {
+            let data = new FormData()
+            data.append("type", "createGroup");
+            data.append("groupName", groupNameInput.value);
+            sendData(data);
+            setTimeout(getAndUpdateGroupData, 500)
+
+            groupCreateModal.classList.remove("show");
+            groupCreateModal.click();
+        }
+    }, false);
+    groupDeleteButton.addEventListener("click", function (event) {
+            let groupId = group_data[groupSelect.value].id;
+
+            let data = new FormData()
+            data.append("type", "deleteGroup");
+            data.append("groupId", groupId);
+            sendData(data);
+            setTimeout(getAndUpdateGroupData, 500)
+
         }, false);
     userAddForm.addEventListener("submit", function (event) {
             let groupIdField = document.getElementById("memberAddGroupId");
@@ -461,12 +505,7 @@
                 usernameInput.classList.add("is-invalid");
             }
         }, false);
-    groupDeleteForm.addEventListener("submit", function (event) {
-            let groupIdField = document.getElementById("groupDeleteGroupIdInput");
-            groupIdField.value = group_data[groupSelect.value].id;
-        }, false);
 
-    groupLeaveForm = document.getElementById("groupLeaveForm");
 
     </script>
 {% endblock %}

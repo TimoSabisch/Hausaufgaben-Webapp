@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 import django.contrib.auth as auth
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 import json
 import datetime
 from .models import Group, Entry
@@ -99,7 +100,49 @@ def get_view_data(request, group):
 
 
 # Views
+@csrf_exempt
 def index(request):
+
+    if request.user.is_authenticated and request.method == "POST":
+        user = request.user
+
+        if request.POST["type"] == "getGroupData":
+            groups = user.group_set.all()
+
+            group_info = []
+            for group_ in groups:
+                group_info.append({
+                    "id": group_.id,
+                    "title": group_.title,
+                    "members": [
+                        {
+                            "id": member.id,
+                            "username": member.username,
+                            "role": group_.get_role(member)
+                        } for member in group_.members.all()
+                    ]
+                })
+            data = {
+                "groups": group_info
+            }
+
+            return JsonResponse(data, safe=True)
+        elif request.POST["type"] == "createGroup":
+            group_name = request.POST["groupName"]
+
+            group_ = Group(title=group_name, admins=[user.id])
+            group_.save()
+            group_.members.add(user)
+            group_.save()
+
+            return JsonResponse({"value": "success"}, safe=True)
+        elif request.POST["type"] == "deleteGroup":
+            group_ = request.POST["groupId"]
+            group_ = Group.objects.get(id=group_)
+            if user.id in group_.admins:
+                group_.delete()
+
+            return JsonResponse({"value": "success"}, safe=True)
 
     return redirect("home" if request.user.is_authenticated else "login")
 
