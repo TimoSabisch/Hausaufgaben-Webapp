@@ -155,6 +155,40 @@ def index(request):
                 return JsonResponse({"value": "failed", "message": "invalid username"}, safe=True)
 
             return JsonResponse({"value": "success"}, safe=True)
+        elif request.POST["type"] == "setRole":
+            group_ = request.POST["groupId"]
+            user_id = request.POST["userId"]
+            role = int(request.POST["role"])
+            group_ = Group.objects.get(id=group_)
+            role = group_.Role.MEMBER if role == 1 else Group.Role.ADMIN
+
+            group_.set_role(User.objects.get(id=user_id), role)
+            group_.save()
+
+            return JsonResponse({"value": "success"}, safe=True)
+        elif request.POST["type"] == "kickMember":
+            group_ = request.POST["groupId"]
+            user_id = request.POST["userId"]
+            group_ = Group.objects.get(id=group_)
+
+            group_.remove_member(User.objects.get(id=user_id))
+            group_.save()
+
+            return JsonResponse({"value": "success"}, safe=True)
+        elif request.POST["type"] == "leaveGroup":
+            group_ = request.POST["groupId"]
+            group_ = Group.objects.get(id=group_)
+
+            group_.remove_member(user)
+
+            if len(group_.members.all()) == 0:
+                group_.delete()
+            elif len(group_.admins) == 0:
+                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
+
+            group_.save()
+
+            return JsonResponse({"value": "success"}, safe=True)
 
     return redirect("home" if request.user.is_authenticated else "login")
 
@@ -240,72 +274,6 @@ def week_view(request, group=0):
                 http_redirect = True
             else:
                 http_redirect = True
-        elif request.POST["type"] == "createGroup":
-            group_name = request.POST["groupName"]
-
-            group_ = Group(title=group_name, admins=[user.id])
-            group_.save()
-            group_.members.add(user)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "addUser":
-            username = request.POST["username"]
-            group_id = int(request.POST["group"])
-
-            if User.objects.filter(username=username) and group_id != -1:
-                group_ = Group.objects.get(id=group_id)
-                group_.add_member(User.objects.get(username=username))
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "leaveGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=int(group_))
-            group_.remove_member(user)
-            group_.save()
-
-            if len(group_.members.all()) == 0:
-                group_.delete()
-            elif len(group_.admins) == 0:
-                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "setAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.ADMIN)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "removeAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.MEMBER)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "kickUser":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.remove_member(user_)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "deleteGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=group_)
-            if user.id in group_.admins:
-                group_.delete()
-
-            http_redirect = True
 
     elif request.method == "GET":
         request.session["weekview_week"] = 0
@@ -396,72 +364,6 @@ def entry_view(request, group=0):
                 http_redirect = True
             else:
                 http_redirect = True
-        elif request.POST["type"] == "createGroup":
-            group_name = request.POST["groupName"]
-
-            group_ = Group(title=group_name, admins=[user.id])
-            group_.save()
-            group_.members.add(user)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "addUser":
-            username = request.POST["username"]
-            group_id = int(request.POST["group"])
-
-            if User.objects.filter(username=username) and group_id != -1:
-                group_ = Group.objects.get(id=group_id)
-                group_.add_member(User.objects.get(username=username))
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "leaveGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=int(group_))
-            group_.remove_member(user)
-            group_.save()
-
-            if len(group_.members.all()) == 0:
-                group_.delete()
-            elif len(group_.admins) == 0:
-                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "setAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.ADMIN)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "removeAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.MEMBER)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "kickUser":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.remove_member(user_)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "deleteGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=group_)
-            if user.id in group_.admins:
-                group_.delete()
-
-            http_redirect = True
 
     template = loader.get_template("Hausaufgaben/entry_view.html")
     context = {
@@ -547,72 +449,6 @@ def day_view(request, group=0):
                 http_redirect = True
             else:
                 http_redirect = True
-        elif request.POST["type"] == "createGroup":
-            group_name = request.POST["groupName"]
-
-            group_ = Group(title=group_name, admins=[user.id])
-            group_.save()
-            group_.members.add(user)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "addUser":
-            username = request.POST["username"]
-            group_id = int(request.POST["group"])
-
-            if User.objects.filter(username=username) and group_id != -1:
-                group_ = Group.objects.get(id=group_id)
-                group_.add_member(User.objects.get(username=username))
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "leaveGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=int(group_))
-            group_.remove_member(user)
-            group_.save()
-
-            if len(group_.members.all()) == 0:
-                group_.delete()
-            elif len(group_.admins) == 0:
-                group_.set_role(group_.members.all()[0], group_.Role.ADMIN)
-                group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "setAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.ADMIN)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "removeAdmin":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.set_role(user_, group_.Role.MEMBER)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "kickUser":
-            group_ = request.POST["group"]
-            userid = request.POST["user"]
-            group_ = Group.objects.get(id=group_)
-            user_ = User.objects.get(id=userid)
-            group_.remove_member(user_)
-            group_.save()
-
-            http_redirect = True
-        elif request.POST["type"] == "deleteGroup":
-            group_ = request.POST["group"]
-            group_ = Group.objects.get(id=group_)
-            if user.id in group_.admins:
-                group_.delete()
-
-            http_redirect = True
 
     template = loader.get_template("Hausaufgaben/day_view.html")
     context = {

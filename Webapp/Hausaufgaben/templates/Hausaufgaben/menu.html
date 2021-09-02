@@ -203,7 +203,7 @@
                     <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
                         <span class="input-group-text" style="width: 22%">Name</span>
                         <input class="form-control has-validation" id="usernameInput" name="username" type="text" aria-label="username" placeholder="Name" value="" required>
-                        <div class="invalid-feedback">Gib einen Namen an.</div>
+                        <div id="userAddInvalidFeedback" class="invalid-feedback">Gib einen Namen an.</div>
                     </div>
                     <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
                         <button id="userAddButton" class="btn btn-primary btn-sm mt-0" type="button" style="margin-bottom: 0; width: 40%">Hinzufügen</button>
@@ -297,6 +297,7 @@
     group_data = {{ group_info|safe }};
     postURL = "{% url view currently_viewed %}"
     userid = {{ userid }};
+    selectedGroup = -1;
 
     userAdminGroups = [];
 
@@ -311,43 +312,29 @@
 
     function updateGroupModalList() {
         memberList.innerHTML = "";
-        for (let i = 0; i < group_data[groupSelect.value].members.length; i++) {
-            let member = group_data[groupSelect.value].members[i];
+        if (!userAdminGroups.includes(group_data[groupSelect.value].id)) {
+            document.getElementById("groupDeleteButton").style.display = "none";
+        }
+        else {
+            document.getElementById("groupDeleteButton").style.display = "";
+        }
 
-            let actionUrl = "{% url view currently_viewed %}"
+        for (let i = 0; i < group_data[groupSelect.value].members.length; i++) {
+            let group = group_data[groupSelect.value];
+            let member = group.members[i];
 
             let optionsDD = `
 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberOptionDD" style="padding: 0">
-    <form action="${actionUrl}" method="post">
-        <input type="hidden" name="type" value="setAdmin">
-        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
-        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
-        <li><button class="dropdown-item btn-sm" type="submit">Admin hinzufügen</button></li>
-    </form>
+    <li><button class="dropdown-item btn-sm" type="button" onclick="setRole(${group.members[i].id}, 2)">Admin hinzufügen</button></li>
     <li><hr class="dropdown-divider" style="margin: 0"></li>
-    <form action="${actionUrl}" method="post">
-        <input type="hidden" name="type" value="kickUser">
-        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
-        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
-        <li><button id="memberKickButton" class="dropdown-item btn-sm" type="submit">Aus Gruppe entfernen</button></li>
-    </form>
+    <li><button id="memberKickButton" class="dropdown-item btn-sm" type="button" onclick="kickGroupMember(${group.members[i].id})">Aus Gruppe entfernen</button></li>
 </ul>`
             if (member.role === 1)
                 optionsDD = `
 <ul id="optionsDD" class="dropdown-menu dropdown-menu-end" aria-labelledby="memberOptionDD" style="padding: 0">
-    <form action="${actionUrl}" method="post">
-        <input type="hidden" name="type" value="removeAdmin">
-        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
-        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
-        <li><button class="dropdown-item btn-sm" type="submit">Admin entfernen</button></li>
-    </form>
+    <li><button class="dropdown-item btn-sm" type="button" onclick="setRole(${group.members[i].id}, 1)">Admin entfernen</button></li>
     <li><hr class="dropdown-divider" style="margin: 0"></li>
-    <form action="${actionUrl}" method="post">
-        <input type="hidden" name="type" value="kickUser">
-        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
-        <input type="hidden" name="user" value="${group_data[groupSelect.value].members[i].id}">
-        <li><button id="memberKickButton" class="dropdown-item btn-sm" type="submit">Aus Gruppe entfernen</button></li>
-    </form>
+    <li><button id="memberKickButton" class="dropdown-item btn-sm" type="button" onclick="kickGroupMember(${group.members[i].id})">Aus Gruppe entfernen</button></li>
 </ul>`
 
             let optionsHTML = `
@@ -360,7 +347,7 @@
     ${optionsDD}
 </div>`;
             let roleInfoColLength = 2;
-            if (!userAdminGroups.includes(group_data[groupSelect.value].id)) {
+            if (!userAdminGroups.includes(group.id)) {
                 optionsHTML = "";
                 roleInfoColLength = 3;
             }
@@ -368,16 +355,12 @@
                 roleInfoColLength = 2;
                 optionsHTML = `
 <div class="col-1" style="padding-right: 3px">
-    <form id="groupLeaveForm" action="{% url view currently_viewed %}" method="POST">
-        <input type="hidden" name="type" value="leaveGroup">
-        <input type="hidden" name="group" value="${group_data[groupSelect.value].id}">
-        <button class="btn btn-outline-primary btn-sm float-end" type="submit">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 6 16 6">
-                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
-            </svg>
-        </button>
-    </form>
+    <button class="btn btn-outline-primary btn-sm float-end" type="button" onclick="leaveGroup()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 6 16 6">
+            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+        </svg>
+    </button>
 </div>
 `;
             }
@@ -415,12 +398,13 @@
             try{
                 document.getElementById("groupModalBody").getElementsByTagName("h5").item(0).remove();
                 document.getElementById("groupModalBody").getElementsByTagName("ul").item(1).remove();
-                document.getElementById("groupDeleteForm").remove();
+                document.getElementById("groupDeleteButton").remove();
                 document.getElementById("memberAddButton").disabled = "true";
             } catch (e) {}
         }
         else {
             groupSelect.disabled = "false";
+            groupSelect.removeAttribute("disabled");
             userAdminGroups.length = 0;
             for (let i = 0; i < group_data.length; i++) {
                 for (let j = 0; j < group_data[i].members.length; j++) {
@@ -475,11 +459,15 @@
             let data = new FormData()
             data.append("type", "createGroup");
             data.append("groupName", groupNameInput.value);
-            sendData(data);
-            setTimeout(getAndUpdateGroupData, 500);
+            sendData(data)
+                .then(res => res.json())
+                .then(resJson => {
+                    getAndUpdateGroupData();
 
-            groupCreateModal.classList.remove("show");
-            groupCreateModal.click();
+                    groupNameInput.value = "";
+                    groupCreateModal.classList.remove("show");
+                    groupCreateModal.click();
+                })
         }
     }, false);
     groupDeleteButton.addEventListener("click", function (event) {
@@ -488,9 +476,11 @@
         let data = new FormData()
         data.append("type", "deleteGroup");
         data.append("groupId", groupId);
-        sendData(data);
-        setTimeout(getAndUpdateGroupData, 500)
-
+        sendData(data)
+            .then(res => res.json())
+            .then(resJson => {
+                getAndUpdateGroupData();
+            })
     }, false);
     userAddButton.addEventListener("click", function (event) {
             let groupId = group_data[groupSelect.value].id;
@@ -500,6 +490,7 @@
                 event.preventDefault();
                 event.stopPropagation();
                 usernameInput.classList.add("is-invalid");
+                document.getElementById("userAddInvalidFeedback").innerHTML = "Gib einen Namen an";
             }
             else {
                 let username = usernameInput.value;
@@ -512,16 +503,74 @@
                     .then(res => res.json())
                     .then(resJson => {
                         if (resJson.value === "success") {
-                            setTimeout(getAndUpdateGroupData, 500);
+                            getAndUpdateGroupData();
+
+                            usernameInput.value = "";
                             userAddModal.classList.remove("show");
                             userAddModal.click();
                         }
                         else {
                             usernameInput.classList.add("is-invalid");
+                            document.getElementById("userAddInvalidFeedback").innerHTML = "Ein Benutzer mit diesem Namen existiert nicht";
                         }
                     })
             }
         }, false);
+
+    function setRole(userId, role) {
+        let groupId = group_data[groupSelect.value].id;
+
+        let data = new FormData()
+        data.append("type", "setRole");
+        data.append("userId", userId);
+        data.append("groupId", groupId);
+        data.append("role", role);
+
+        sendData(data)
+            .then(res => res.json())
+            .then(resJson => {
+                if (resJson.value === "success") {
+                    getAndUpdateGroupData();
+                    userAddModal.classList.remove("show");
+                    userAddModal.click();
+                }
+            })
+    }
+    function kickGroupMember(userId) {
+        let groupId = group_data[groupSelect.value].id;
+
+        let data = new FormData()
+        data.append("type", "kickMember");
+        data.append("userId", userId);
+        data.append("groupId", groupId);
+
+        sendData(data)
+            .then(res => res.json())
+            .then(resJson => {
+                if (resJson.value === "success") {
+                    getAndUpdateGroupData();
+                    userAddModal.classList.remove("show");
+                    userAddModal.click();
+                }
+            })
+    }
+    function leaveGroup() {
+        let groupId = group_data[groupSelect.value].id;
+
+        let data = new FormData()
+        data.append("type", "leaveGroup");
+        data.append("groupId", groupId);
+
+        sendData(data)
+            .then(res => res.json())
+            .then(resJson => {
+                if (resJson.value === "success") {
+                    getAndUpdateGroupData();
+                    userAddModal.classList.remove("show");
+                    userAddModal.click();
+                }
+            })
+    }
 
 
     </script>
