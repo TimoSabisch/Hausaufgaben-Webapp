@@ -199,20 +199,16 @@
                 <div class="modal-header" style="padding: 10px 10px">
                     <h5>Mitglied hinzufügen</h5>
                 </div>
-                <form id="userAddForm" action="{% url view currently_viewed %}" method="post">
-                    <input type="hidden" name="type" value="addUser">
-                    <input id="memberAddGroupId" type="hidden" name="group" value="-1">
-                    <div id="memberAddModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
-                        <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
-                            <span class="input-group-text" style="width: 22%">Name</span>
-                            <input class="form-control has-validation" id="usernameInput" name="username" type="text" aria-label="username" placeholder="Name" value="" required>
-                            <div class="invalid-feedback">Gib einen Namen an.</div>
-                        </div>
-                        <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
-                            <button class="btn btn-primary btn-sm mt-0" type="submit" style="margin-bottom: 0; width: 40%">Hinzufügen</button>
-                        </div>
+                <div id="memberAddModalBody" class="modal-body" style="padding: 0 10px 10px 10px;">
+                    <div class="input-group input-group-sm has-validation" style="margin-top: 10px; margin-bottom: 10px">
+                        <span class="input-group-text" style="width: 22%">Name</span>
+                        <input class="form-control has-validation" id="usernameInput" name="username" type="text" aria-label="username" placeholder="Name" value="" required>
+                        <div class="invalid-feedback">Gib einen Namen an.</div>
                     </div>
-                </form>
+                    <div class="w-100 text-center mt-0" style="border-top: 1px solid #dee2e6; padding: 10px 0 0 0">
+                        <button id="userAddButton" class="btn btn-primary btn-sm mt-0" type="button" style="margin-bottom: 0; width: 40%">Hinzufügen</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -307,7 +303,8 @@
     groupSelect = document.getElementById("groupModalGroupSelect");
     memberList = document.getElementById("groupMemberList");
     memberListSplit = document.getElementById("groupMemberListSplit");
-    userAddForm = document.getElementById("userAddForm");
+    userAddButton = document.getElementById("userAddButton");
+    userAddModal = document.getElementById("memberAddModal");
     groupDeleteButton = document.getElementById("groupDeleteButton");
     groupCreateModal = document.getElementById("groupCreateModal")
     groupCreateButton = document.getElementById("groupCreateButton");
@@ -423,6 +420,7 @@
             } catch (e) {}
         }
         else {
+            groupSelect.disabled = "false";
             userAdminGroups.length = 0;
             for (let i = 0; i < group_data.length; i++) {
                 for (let j = 0; j < group_data[i].members.length; j++) {
@@ -461,7 +459,7 @@
     }
     function sendData(data) {
 
-        fetch("{% url "index" %}", {
+        return fetch("{% url "index" %}", {
             method: "POST",
             body: data
         })
@@ -478,31 +476,50 @@
             data.append("type", "createGroup");
             data.append("groupName", groupNameInput.value);
             sendData(data);
-            setTimeout(getAndUpdateGroupData, 500)
+            setTimeout(getAndUpdateGroupData, 500);
 
             groupCreateModal.classList.remove("show");
             groupCreateModal.click();
         }
     }, false);
     groupDeleteButton.addEventListener("click", function (event) {
+        let groupId = group_data[groupSelect.value].id;
+
+        let data = new FormData()
+        data.append("type", "deleteGroup");
+        data.append("groupId", groupId);
+        sendData(data);
+        setTimeout(getAndUpdateGroupData, 500)
+
+    }, false);
+    userAddButton.addEventListener("click", function (event) {
             let groupId = group_data[groupSelect.value].id;
-
-            let data = new FormData()
-            data.append("type", "deleteGroup");
-            data.append("groupId", groupId);
-            sendData(data);
-            setTimeout(getAndUpdateGroupData, 500)
-
-        }, false);
-    userAddForm.addEventListener("submit", function (event) {
-            let groupIdField = document.getElementById("memberAddGroupId");
-            groupIdField.value = group_data[parseInt(groupSelect.value)].id;
 
             let usernameInput = document.getElementById("usernameInput");
             if (usernameInput.value === "") {
                 event.preventDefault();
                 event.stopPropagation();
                 usernameInput.classList.add("is-invalid");
+            }
+            else {
+                let username = usernameInput.value;
+
+                let data = new FormData()
+                data.append("type", "groupAddMember");
+                data.append("groupId", groupId);
+                data.append("username", username);
+                sendData(data)
+                    .then(res => res.json())
+                    .then(resJson => {
+                        if (resJson.value === "success") {
+                            setTimeout(getAndUpdateGroupData, 500);
+                            userAddModal.classList.remove("show");
+                            userAddModal.click();
+                        }
+                        else {
+                            usernameInput.classList.add("is-invalid");
+                        }
+                    })
             }
         }, false);
 

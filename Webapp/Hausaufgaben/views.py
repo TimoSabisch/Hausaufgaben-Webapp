@@ -143,6 +143,18 @@ def index(request):
                 group_.delete()
 
             return JsonResponse({"value": "success"}, safe=True)
+        elif request.POST["type"] == "groupAddMember":
+            group_ = request.POST["groupId"]
+            username = request.POST["username"]
+            group_ = Group.objects.get(id=group_)
+
+            if User.objects.filter(username=username):
+                group_.add_member(User.objects.get(username=username))
+                group_.save()
+            else:
+                return JsonResponse({"value": "failed", "message": "invalid username"}, safe=True)
+
+            return JsonResponse({"value": "success"}, safe=True)
 
     return redirect("home" if request.user.is_authenticated else "login")
 
